@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Facebook, Instagram, Youtube } from "lucide-react";
+import { FaTiktok } from 'react-icons/fa';
 
 const Footer = () => {
   return (
@@ -28,16 +29,16 @@ const Footer = () => {
           <div>
             <h3 className="font-bold text-lg mb-4 text-white">Follow Us</h3>
             <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://www.facebook.com/share/16sNmBVFcp/" className="text-gray-400 hover:text-white transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="w-5 h-5" />
+              <a href="https://www.tiktok.com/@glory.of.sports?is_from_webapp=1&sender_device=pc" className="text-gray-400 hover:text-white transition-colors">
+                <FaTiktok className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://www.instagram.com/glory_of_sport/" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://youtube.com/@gloryofsports1?si=UwNJ2XX0Ka8-hpQ-" className="text-gray-400 hover:text-white transition-colors">
                 <Youtube className="w-5 h-5" />
               </a>
             </div>
