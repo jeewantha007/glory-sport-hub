@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { 
+  ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play 
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
+import EmailSubscribeForm from "@/components/EmailSubscribeForm";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,9 +37,7 @@ const PostDetail = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (id) {
-      fetchPost();
-    }
+    if (id) fetchPost();
   }, [id]);
 
   const fetchPost = async () => {
@@ -47,14 +47,9 @@ const PostDetail = () => {
         .select("*")
         .eq("id", id)
         .maybeSingle();
-
       if (error) throw error;
       setPost(data);
-      
-      // Set page title
-      if (data?.title) {
-        document.title = data.title;
-      }
+      if (data?.title) document.title = data.title;
     } catch (error: any) {
       toast({
         title: "Error",
@@ -72,31 +67,22 @@ const PostDetail = () => {
     { icon: TrendingUp, text: "Best Value" }
   ];
 
-  // Combine all images (primary + additional)
   const allImages = post ? [post.image_url, ...(post.additional_images || [])].filter(Boolean) : [];
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-  };
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
 
   const getVideoEmbedUrl = (url: string) => {
-    // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       const videoId = url.includes('youtu.be') 
         ? url.split('youtu.be/')[1]?.split('?')[0]
         : url.split('v=')[1]?.split('&')[0];
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    // Vimeo
     if (url.includes('vimeo.com')) {
       const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
       return `https://player.vimeo.com/video/${videoId}`;
     }
-    // Direct video file
     return url;
   };
 
@@ -150,14 +136,10 @@ const PostDetail = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
       <Navbar />
-      
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="max-w-6xl mx-auto mb-6">
-          <Link 
-            to="/" 
-            className="inline-flex items-center text-gray-400 hover:text-white transition-colors group"
-          >
+          <Link to="/" className="inline-flex items-center text-gray-400 hover:text-white transition-colors group">
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to all products</span>
           </Link>
@@ -168,25 +150,14 @@ const PostDetail = () => {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
             {/* Image/Video Section */}
             <div className="space-y-4">
-              {/* Main Image/Video Display */}
               <div className="relative group overflow-hidden rounded-2xl shadow-2xl bg-gray-800">
                 {showVideo && post.video_url ? (
-                  <div className="aspect-square">
-                    {post.video_url.includes('youtube.com') || post.video_url.includes('youtu.be') || post.video_url.includes('vimeo.com') ? (
-                      <iframe
-                        src={getVideoEmbedUrl(post.video_url)}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video
-                        src={post.video_url}
-                        controls
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
+                  <iframe
+                    src={getVideoEmbedUrl(post.video_url)}
+                    className="w-full aspect-square"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 ) : (
                   <>
                     <img
@@ -194,8 +165,6 @@ const PostDetail = () => {
                       alt={post.title}
                       className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    
-                    {/* Image Navigation Arrows */}
                     {allImages.length > 1 && (
                       <>
                         <button
@@ -212,8 +181,6 @@ const PostDetail = () => {
                         </button>
                       </>
                     )}
-
-                    {/* Video Play Button Overlay */}
                     {post.video_url && !showVideo && (
                       <button
                         onClick={() => setShowVideo(true)}
@@ -225,37 +192,6 @@ const PostDetail = () => {
                       </button>
                     )}
                   </>
-                )}
-
-                {/* Badges */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  {post.category && (
-                    <span className="inline-block px-4 py-2 bg-white/95 backdrop-blur-sm text-black rounded-full text-sm font-bold shadow-lg">
-                      {post.category}
-                    </span>
-                  )}
-                  {post.is_featured && (
-                    <span className="inline-flex items-center gap-1 px-4 py-2 bg-yellow-500/95 backdrop-blur-sm text-black rounded-full text-sm font-bold shadow-lg">
-                      <Star className="w-4 h-4 fill-current" />
-                      Featured
-                    </span>
-                  )}
-                </div>
-
-                {/* Stock Status Badge */}
-                {post.stock_status && (
-                  <div className="absolute top-4 right-4">
-                    <span className={`inline-block px-4 py-2 backdrop-blur-sm rounded-full text-sm font-bold shadow-lg ${
-                      post.stock_status === 'in_stock' 
-                        ? 'bg-green-500/95 text-white' 
-                        : post.stock_status === 'limited'
-                        ? 'bg-orange-500/95 text-white'
-                        : 'bg-red-500/95 text-white'
-                    }`}>
-                      {post.stock_status === 'in_stock' ? '✓ In Stock' : 
-                       post.stock_status === 'limited' ? '⚠ Limited Stock' : '✗ Out of Stock'}
-                    </span>
-                  </div>
                 )}
               </div>
 
@@ -296,7 +232,7 @@ const PostDetail = () => {
                   )}
                 </div>
               )}
-              
+
               {/* Trust Badges */}
               <div className="grid grid-cols-3 gap-3">
                 {features.map((feature, index) => (
@@ -317,8 +253,7 @@ const PostDetail = () => {
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight text-white">
                   {post.title}
                 </h1>
-                
-                {/* Meta Info */}
+
                 <div className="flex flex-wrap items-center gap-4 mb-6 text-sm">
                   {post.price && (
                     <div className="flex items-center gap-1.5 text-green-400 font-bold text-2xl">
@@ -336,15 +271,12 @@ const PostDetail = () => {
                     <div className="flex items-center gap-1.5 text-gray-400">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(post.created_at).toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                        month: 'long', day: 'numeric', year: 'numeric' 
                       })}</span>
                     </div>
                   )}
                 </div>
 
-                {/* Description */}
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-lg mb-6">
                   <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-white">
                     <CheckCircle className="w-5 h-5 text-green-500" />
@@ -355,7 +287,6 @@ const PostDetail = () => {
                   </p>
                 </div>
 
-                {/* Tags */}
                 {post.tags && post.tags.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
@@ -377,7 +308,7 @@ const PostDetail = () => {
               </div>
 
               {/* CTA Section */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 space-y-4">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-gray-700 rounded-lg">
                     <Star className="w-5 h-5 text-white" />
@@ -418,6 +349,15 @@ const PostDetail = () => {
                   Secure checkout • Free shipping available • Money-back guarantee
                 </p>
               </div>
+
+              {/* Email Subscribe Form */}
+              <div className="bg-black rounded-2xl p-6 mb-12">
+                <h2 className="text-xl font-bold mb-3 text-white text-center">
+                  Subscribe for More Sports Updates
+                </h2>
+                <EmailSubscribeForm />
+              </div>
+
             </div>
           </div>
 
@@ -448,11 +388,10 @@ const PostDetail = () => {
               </div>
             </div>
           </div>
+
         </article>
       </main>
-
       <Footer />
-      <EmailPopup />
     </div>
   );
 };

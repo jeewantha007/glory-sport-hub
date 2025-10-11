@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Mail, MessageSquare, Send, MapPin, Clock, Phone, CheckCircle } from "lucide-react";
+import { Mail, MessageSquare, Send, MapPin, Clock, CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { send } from "@emailjs/browser";
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -17,25 +18,55 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+  
+    const templateParams = {
+      name,
+      email,
+      message,
+    };
 
-    // Simulate form submission
-    setTimeout(() => {
+  
+    try {
+      const response = await send(
+        "service_lh1ur5q",   // Your EmailJS Service ID
+        "template_17jwhag",  // Your EmailJS Template ID
+        templateParams,
+        "seVqyhozac9r2-j5g" // Your EmailJS Public Key
+      );
+  
+      console.log("EmailJS response:", response);
+  
       toast({
         title: "Message Sent Successfully!",
         description: "We'll get back to you within 24 hours.",
       });
+  
       setName("");
       setEmail("");
       setMessage("");
+    } catch (error: any) {
+      console.error("EmailJS error:", error);
+  
+      if (error?.text) {
+        console.error("Error text:", error.text);
+      }
+  
+      toast({
+        title: "Error Sending Message",
+        description: "Please check your service/template ID and try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
+  
 
   const contactInfo = [
     {
       icon: Mail,
       title: "Email Us",
-      value: "contact@gloryofsport.com",
+      value: "gloryofsports.contact@gmail.com",
       description: "Send us an email anytime",
       color: "text-blue-500",
       bgColor: "bg-blue-500/10"
@@ -61,7 +92,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-gray-800 to-black py-20 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
@@ -165,9 +196,7 @@ const Contact = () => {
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
-                      <>
-                        <span className="animate-pulse">Sending...</span>
-                      </>
+                      <span className="animate-pulse">Sending...</span>
                     ) : (
                       <>
                         Send Message
@@ -200,19 +229,6 @@ const Contact = () => {
                 </div>
               </div>
 
-              {/* Quick Response */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-gray-700 rounded-lg">
-                    <Clock className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="font-bold text-white">Quick Response</h3>
-                </div>
-                <p className="text-sm text-gray-400">
-                  Our team monitors messages regularly and aims to respond within 24 hours during business days.
-                </p>
-              </div>
-
               {/* Direct Email */}
               <div className="bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800">
                 <div className="flex items-center gap-3 mb-3">
@@ -225,28 +241,13 @@ const Contact = () => {
                   Prefer email? Reach us directly at:
                 </p>
                 <a 
-                  href="mailto:contact@gloryofsport.com"
+                  href="mailto:gloryofsports.contact@gmail.com"
                   className="text-white font-semibold hover:underline break-all"
                 >
-                  contact@gloryofsport.com
+                  gloryofsports.contact@gmail.com
                 </a>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto mt-16">
-          <div className="bg-gradient-to-r from-gray-800 to-black rounded-2xl p-8 text-center shadow-2xl border border-gray-700">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Need Immediate Help?
-            </h2>
-            <p className="text-lg text-gray-300 mb-6">
-              Check out our FAQ section for quick answers to common questions
-            </p>
-            <button className="px-8 py-3 bg-white text-black rounded-xl font-semibold hover:bg-gray-200 transition-all hover:scale-105 shadow-xl">
-              View FAQ
-            </button>
           </div>
         </div>
       </main>
