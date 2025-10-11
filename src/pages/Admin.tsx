@@ -12,16 +12,21 @@ import PostForm from "./admin/PostForm";
 import NewsPostForm from "./admin/NewsPostForm";
 import PostsFilter from "./admin/PostsFilter";
 import PostsList from "./admin/PostsList";
-import { postService, authService } from "@/services";
-import { Post } from "@/integrations/supabase/types";
+import NewsPostsList from "./admin/NewsPostsList";
+import { postService, newsPostService, authService } from "@/services";
+import { Post, NewsPost } from "@/integrations/supabase/types";
 
 const Admin = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
+  const [filteredNewsPosts, setFilteredNewsPosts] = useState<NewsPost[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [editingNewsPost, setEditingNewsPost] = useState<NewsPost | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
+  const [selectedNewsPosts, setSelectedNewsPosts] = useState<Set<string>>(new Set());
   const [addingType, setAddingType] = useState<"product" | "news">("product");
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,13 +90,39 @@ const Admin = () => {
   }, [posts, searchTerm, filterCategory, sortBy]);
 
   const fetchPosts = async () => {
-    const { data, error } = await postService.fetchPosts();
-
-    if (error)
+    // Fetch product posts
+    const { data: postData, error: postError } = await postService.fetchPosts();
+    
+    if (postError)
       toast({ title: "Error", description: "Failed to fetch posts", variant: "destructive" });
     else {
-      setPosts(data || []);
-      setFilteredPosts(data || []);
+      setPosts(postData || []);
+      setFilteredPosts(postData || []);
+    }
+    
+    // Fetch news posts
+    const { data: newsData, error: newsError } = await newsPostService.fetchNewsPosts();
+    if (newsError)
+      toast({ title: "Error", description: "Failed to fetch news posts", variant: "destructive" });
+    else {
+      // Transform the data to match the NewsPost interface
+      const transformedNewsData = (newsData || []).map(post => {
+        let sections = null;
+        if (post.sections) {
+          try {
+            sections = typeof post.sections === 'string' ? JSON.parse(post.sections) : post.sections;
+          } catch (e) {
+            console.error('Failed to parse sections for post:', post.id, e);
+            sections = null;
+          }
+        }
+        return {
+          ...post,
+          sections
+        };
+      });
+      setNewsPosts(transformedNewsData);
+      setFilteredNewsPosts(transformedNewsData);
     }
   };
 
@@ -103,12 +134,20 @@ const Admin = () => {
   const handleFormSuccess = () => {
     setIsAdding(false);
     setEditingPost(null);
+    setEditingNewsPost(null);
     fetchPosts();
   };
 
   const handleEdit = (post: Post) => {
     setEditingPost(post);
     setAddingType("product");
+    setIsAdding(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleEditNewsPost = (post: NewsPost) => {
+    setEditingNewsPost(post);
+    setAddingType("news");
     setIsAdding(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -122,6 +161,19 @@ const Admin = () => {
       toast({ title: "Error", description: "Failed to delete post", variant: "destructive" });
     else {
       toast({ title: "Success!", description: "Post deleted successfully." });
+      fetchPosts();
+    }
+  };
+
+  const handleDeleteNewsPost = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this news post?")) return;
+
+    const { error } = await newsPostService.deleteNewsPost(id);
+
+    if (error)
+      toast({ title: "Error", description: "Failed to delete news post", variant: "destructive" });
+    else {
+      toast({ title: "Success!", description: "News post deleted successfully." });
       fetchPosts();
     }
   };
@@ -141,11 +193,39 @@ const Admin = () => {
     }
   };
 
+  const handleBulkDeleteNewsPosts = async () => {
+    if (selectedNewsPosts.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedNewsPosts.size} news posts?`)) return;
+
+    // Since there's no bulk delete for news posts, we'll delete them one by one
+    const deletePromises = Array.from(selectedNewsPosts).map(id => 
+      newsPostService.deleteNewsPost(id)
+    );
+
+    const results = await Promise.all(deletePromises);
+    const errors = results.filter(result => result.error);
+
+    if (errors.length > 0)
+      toast({ title: "Error", description: `Failed to delete ${errors.length} news posts`, variant: "destructive" });
+    else {
+      toast({ title: "Success!", description: `${selectedNewsPosts.size} news posts deleted successfully.` });
+      setSelectedNewsPosts(new Set());
+      fetchPosts();
+    }
+  };
+
   const togglePostSelection = (id: string) => {
     const newSelected = new Set(selectedPosts);
     if (newSelected.has(id)) newSelected.delete(id);
     else newSelected.add(id);
     setSelectedPosts(newSelected);
+  };
+
+  const toggleNewsPostSelection = (id: string) => {
+    const newSelected = new Set(selectedNewsPosts);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedNewsPosts(newSelected);
   };
 
   const uniqueCategories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean)));
@@ -216,12 +296,16 @@ const Admin = () => {
           />
         ) : (
           <NewsPostForm
+            editingPost={editingNewsPost}
             onSuccess={handleFormSuccess}
-            onCancel={() => setIsAdding(false)}
+            onCancel={() => {
+              setIsAdding(false);
+              setEditingNewsPost(null);
+            }}
           />
         )}
 
-        {/* Filter & List */}
+        {/* Filter & Lists */}
         <PostsFilter
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -232,6 +316,7 @@ const Admin = () => {
           uniqueCategories={uniqueCategories}
         />
 
+        {/* Product Posts List */}
         <PostsList
           posts={filteredPosts}
           allPosts={posts}
@@ -243,6 +328,22 @@ const Admin = () => {
           searchTerm={searchTerm}
           filterCategory={filterCategory}
           onAddPost={() => setIsAdding(true)}
+        />
+
+        {/* News Posts List */}
+        <NewsPostsList
+          posts={filteredNewsPosts}
+          allPosts={newsPosts}
+          selectedPosts={selectedNewsPosts}
+          onToggleSelection={toggleNewsPostSelection}
+          onEdit={handleEditNewsPost}
+          onDelete={handleDeleteNewsPost}
+          onBulkDelete={handleBulkDeleteNewsPosts}
+          searchTerm={searchTerm}
+          onAddPost={() => {
+            setIsAdding(true);
+            setAddingType("news");
+          }}
         />
       </main>
 

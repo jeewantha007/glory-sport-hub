@@ -164,6 +164,9 @@ const NewsList = () => {
                 {filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'} found
                 {searchQuery && ` for "${searchQuery}"`}
               </p>
+              <Button asChild variant="outline">
+                <Link to="/">Back to Home</Link>
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

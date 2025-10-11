@@ -6,6 +6,7 @@ import EmailPopup from "@/components/EmailPopup";
 import PostCard from "@/components/PostCard";
 import NewsPostCard from "@/components/NewsPostCard";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { newsService } from "@/services";
@@ -198,17 +199,35 @@ const Home = () => {
 
       {/* Featured Section Header */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-            {searchQuery ? "Search Results" : "Featured Sports Gear"}
-          </h2>
-          <p className="text-gray-400 text-lg">
-            {searchQuery 
-              ? `Showing results for "${searchQuery}"`
-              : "Hand-picked equipment and gear to elevate your game"
-            }
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+              {searchQuery ? "Search Results" : "Featured Sports Gear"}
+            </h2>
+            <p className="text-gray-400 text-lg">
+              {searchQuery 
+                ? `Showing results for "${searchQuery}"`
+                : "Hand-picked equipment and gear to elevate your game"
+              }
+            </p>
+          </div>
+          {!searchQuery && (
+            <Button asChild variant="outline" className="hidden md:block">
+              <Link to="/products">
+                View All Products
+              </Link>
+            </Button>
+          )}
         </div>
+        {!searchQuery && (
+          <div className="text-center md:hidden mb-4">
+            <Button asChild variant="outline">
+              <Link to="/products">
+                View All Products
+              </Link>
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* Posts Grid */}
