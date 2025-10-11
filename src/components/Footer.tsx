@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Youtube } from "lucide-react";
 import { FaTiktok } from 'react-icons/fa';
-
+import EmailSubscribeForm from "./EmailSubscribeForm";
 const Footer = () => {
   return (
     <footer className="bg-gray-900 border-t border-gray-800 mt-20">
@@ -40,15 +40,19 @@ const Footer = () => {
               </a>
               <a href="https://youtube.com/@gloryofsports1?si=UwNJ2XX0Ka8-hpQ-" className="text-gray-400 hover:text-white transition-colors">
                 <Youtube className="w-5 h-5" />
+                
               </a>
+              
             </div>
           </div>
         </div>
+      
         
         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
           <p>&copy; {new Date().getFullYear()} Glory of Sport. All rights reserved.</p>
         </div>
       </div>
+      
     </footer>
   );
 };

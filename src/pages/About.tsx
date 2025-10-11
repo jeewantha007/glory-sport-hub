@@ -1,6 +1,7 @@
 import { Target, Award, Users, TrendingUp, Shield, Heart, Zap, CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EmailSubscribeForm from "@/components/EmailSubscribeForm";
 
 const About = () => {
   const features = [
@@ -170,14 +171,8 @@ const About = () => {
               inspiring sports content. Follow us on social media to join a community of passionate athletes 
               and sports fans from around the world.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-4 bg-white text-black rounded-xl font-semibold hover:bg-gray-200 transition-all hover:scale-105 shadow-xl">
-                Subscribe Now
-              </button>
-              <button className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-gray-700 rounded-xl font-semibold hover:bg-white/20 transition-all">
-                Follow Us
-              </button>
-            </div>
+            <EmailSubscribeForm/>
+
           </div>
         </div>
       </main>

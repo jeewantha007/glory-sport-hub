@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import heroBanner from "@/assets/hero-banner.jpg";
+import EmailSubscribeForm from "@/components/EmailSubscribeForm";
 
 interface Post {
   id: string;
@@ -225,9 +226,7 @@ const Home = () => {
             <p className="text-gray-300 text-lg mb-6 max-w-2xl mx-auto">
               Subscribe to get the latest sports gear recommendations and special offers delivered to your inbox
             </p>
-            <button className="bg-white text-black px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-200 transition-all hover:scale-105 shadow-xl">
-              Get Started Today
-            </button>
+           <EmailSubscribeForm/>
           </div>
         </section>
       )}

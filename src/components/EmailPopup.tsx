@@ -59,10 +59,10 @@ const EmailPopup = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="relative bg-card p-8 rounded-lg shadow-lg max-w-md w-full mx-4 animate-scale-in">
+      <div className="relative bg-gray-900 rounded-2xl p-8 shadow-lg max-w-md w-full mx-4 animate-scale-in border border-gray-800">
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -71,8 +71,8 @@ const EmailPopup = () => {
           <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
             <Mail className="w-6 h-6 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Don't Leave Empty-Handed!</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold mb-2 text-white">Don't Leave Empty-Handed!</h2>
+          <p className="text-gray-400">
             Get our Free Sports Fan Gear Guide and exclusive deals straight to your inbox.
           </p>
         </div>
@@ -84,7 +84,7 @@ const EmailPopup = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full"
+            className="w-full bg-gray-800 border-gray-700 text-white placeholder-gray-500"
           />
           <Input
             type="email"
@@ -92,11 +92,11 @@ const EmailPopup = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full"
+            className="w-full bg-gray-800 border-gray-700 text-white placeholder-gray-500"
           />
           <Button 
             type="submit" 
-            className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+            className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Subscribing..." : "Get Free Guide"}
