@@ -11,24 +11,8 @@ import StatsCards from "./admin/StatsCards";
 import PostForm from "./admin/PostForm";
 import PostsFilter from "./admin/PostsFilter";
 import PostsList from "./admin/PostsList";
-
-interface Post {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string;
-  additional_images?: string[];
-  video_url?: string;
-  affiliate_link: string;
-  category: string;
-  tags: string[];
-  price?: number;
-  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
-  affiliate_platform?: string;
-  is_featured?: boolean;
-  meta_title?: string;
-  meta_description?: string;
-}
+import { postService, authService } from "@/services";
+import { Post } from "@/lib/types";
 
 const Admin = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -46,7 +30,7 @@ const Admin = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authService.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
@@ -55,7 +39,7 @@ const Admin = () => {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const subscription = authService.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
         navigate("/auth");
@@ -101,10 +85,7 @@ const Admin = () => {
   }, [posts, searchTerm, filterCategory, sortBy]);
 
   const fetchPosts = async () => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data, error } = await postService.fetchPosts();
 
     if (error) {
       toast({
@@ -119,7 +100,7 @@ const Admin = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await authService.signOut();
     navigate("/");
   };
 
@@ -138,7 +119,7 @@ const Admin = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
 
-    const { error } = await supabase.from("posts").delete().eq("id", id);
+    const { error } = await postService.deletePost(id);
 
     if (error) {
       toast({
@@ -159,24 +140,21 @@ const Admin = () => {
     if (selectedPosts.size === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedPosts.size} posts?`)) return;
 
-    const deletePromises = Array.from(selectedPosts).map(id =>
-      supabase.from("posts").delete().eq("id", id)
-    );
+    const { errors } = await postService.bulkDeletePosts(Array.from(selectedPosts));
 
-    try {
-      await Promise.all(deletePromises);
+    if (errors && errors.length > 0) {
+      toast({
+        title: "Error",
+        description: "Failed to delete some posts",
+        variant: "destructive",
+      });
+    } else {
       toast({
         title: "Success!",
         description: `${selectedPosts.size} posts deleted successfully.`,
       });
       setSelectedPosts(new Set());
       fetchPosts();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete some posts",
-        variant: "destructive",
-      });
     }
   };
 

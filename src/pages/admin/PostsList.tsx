@@ -1,23 +1,6 @@
 import { Edit, Trash2, Video, ExternalLink, Star, TrendingUp, BarChart3, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Post {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string;
-  additional_images?: string[];
-  video_url?: string;
-  affiliate_link: string;
-  category: string;
-  tags: string[];
-  price?: number;
-  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
-  affiliate_platform?: string;
-  is_featured?: boolean;
-  meta_title?: string;
-  meta_description?: string;
-}
+import { Post } from "@/lib/types";
 
 interface PostsListProps {
   posts: Post[];

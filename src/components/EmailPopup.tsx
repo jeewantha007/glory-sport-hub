@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { X, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { emailService } from "@/services";
 
 const EmailPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -34,9 +34,7 @@ const EmailPopup = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("email_subscribers")
-        .insert([{ name, email }]);
+      const { error } = await emailService.subscribeToNewsletter(name, email);
 
       if (error) throw error;
 

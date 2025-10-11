@@ -5,24 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Post {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string;
-  additional_images?: string[];
-  video_url?: string;
-  affiliate_link: string;
-  category: string;
-  tags: string[];
-  price?: number;
-  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
-  affiliate_platform?: string;
-  is_featured?: boolean;
-  meta_title?: string;
-  meta_description?: string;
-}
+import { postService } from "@/services";
+import { Post } from "@/lib/types";
 
 interface PostFormProps {
   editingPost: Post | null;
@@ -222,7 +206,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const postData = {
+    const postData: Omit<Post, "id"> = {
       title,
       description,
       image_url: imageUrl,
@@ -232,7 +216,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
       category,
       tags: tags.split(",").map(tag => tag.trim()).filter(Boolean),
       price: price ? parseFloat(price) : null,
-      stock_status: stockStatus,
+      stock_status: stockStatus as 'in_stock' | 'limited' | 'out_of_stock',
       affiliate_platform: affiliatePlatform || null,
       is_featured: isFeatured,
       meta_title: metaTitle || null,
@@ -241,10 +225,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
 
     try {
       if (editingPost) {
-        const { error } = await supabase
-          .from("posts")
-          .update(postData)
-          .eq("id", editingPost.id);
+        const { error } = await postService.updatePost(editingPost.id, postData);
 
         if (error) throw error;
         
@@ -253,9 +234,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
           description: "Post updated successfully.",
         });
       } else {
-        const { error } = await supabase
-          .from("posts")
-          .insert([postData]);
+        const { error } = await postService.createPost(postData);
 
         if (error) throw error;
         

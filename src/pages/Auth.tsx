@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy } from "lucide-react";
+import { authService } from "@/services";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,13 +16,13 @@ const Auth = () => {
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authService.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/admin");
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const subscription = authService.onAuthStateChange((_event, session) => {
       if (session) {
         navigate("/admin");
       }
@@ -37,10 +37,7 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await authService.signIn(email, password);
         if (error) throw error;
         
         toast({
@@ -48,13 +45,7 @@ const Auth = () => {
           description: "You've successfully logged in.",
         });
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
-          },
-        });
+        const { error } = await authService.signUp(email, password);
         if (error) throw error;
         
         toast({
