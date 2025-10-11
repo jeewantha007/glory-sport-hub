@@ -133,8 +133,8 @@ const Home = () => {
           {[
             { label: "Products", value: posts.length + "+" },
             { label: "Categories", value: new Set(posts.map(p => p.category)).size + "+" },
-            { label: "Trusted Reviews", value: "500+" },
-            { label: "Happy Customers", value: "10K+" }
+            { label: "Trusted Reviews", value: "100+" },
+            { label: "Happy Customers", value: "1K+" }
           ].map((stat, i) => (
             <div key={i} className="bg-gray-900 rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-800">
               <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
