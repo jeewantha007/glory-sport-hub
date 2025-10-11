@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import StatsCards from "./admin/StatsCards";
 import PostForm from "./admin/PostForm";
+import NewsPostForm from "./admin/NewsPostForm";
 import PostsFilter from "./admin/PostsFilter";
 import PostsList from "./admin/PostsList";
 import { postService, authService } from "@/services";
@@ -21,19 +22,19 @@ const Admin = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
-  
+  const [addingType, setAddingType] = useState<"product" | "news">("product");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [sortBy, setSortBy] = useState("newest");
-  
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     authService.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
+      if (!session) navigate("/auth");
+      else {
         setSession(session);
         fetchPosts();
       }
@@ -41,9 +42,7 @@ const Admin = () => {
 
     const subscription = authService.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (!session) {
-        navigate("/auth");
-      }
+      if (!session) navigate("/auth");
     });
 
     return () => subscription.unsubscribe();
@@ -51,19 +50,20 @@ const Admin = () => {
 
   useEffect(() => {
     let filtered = [...posts];
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(post => 
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          post.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
-    
+
     if (filterCategory) {
-      filtered = filtered.filter(post => post.category === filterCategory);
+      filtered = filtered.filter((post) => post.category === filterCategory);
     }
-    
+
     switch (sortBy) {
       case "newest":
         break;
@@ -80,20 +80,16 @@ const Admin = () => {
         filtered.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
         break;
     }
-    
+
     setFilteredPosts(filtered);
   }, [posts, searchTerm, filterCategory, sortBy]);
 
   const fetchPosts = async () => {
     const { data, error } = await postService.fetchPosts();
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch posts",
-        variant: "destructive",
-      });
-    } else {
+    if (error)
+      toast({ title: "Error", description: "Failed to fetch posts", variant: "destructive" });
+    else {
       setPosts(data || []);
       setFilteredPosts(data || []);
     }
@@ -112,8 +108,9 @@ const Admin = () => {
 
   const handleEdit = (post: Post) => {
     setEditingPost(post);
+    setAddingType("product");
     setIsAdding(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id: string) => {
@@ -121,17 +118,10 @@ const Admin = () => {
 
     const { error } = await postService.deletePost(id);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete post",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success!",
-        description: "Post deleted successfully.",
-      });
+    if (error)
+      toast({ title: "Error", description: "Failed to delete post", variant: "destructive" });
+    else {
+      toast({ title: "Success!", description: "Post deleted successfully." });
       fetchPosts();
     }
   };
@@ -142,17 +132,10 @@ const Admin = () => {
 
     const { errors } = await postService.bulkDeletePosts(Array.from(selectedPosts));
 
-    if (errors && errors.length > 0) {
-      toast({
-        title: "Error",
-        description: "Failed to delete some posts",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success!",
-        description: `${selectedPosts.size} posts deleted successfully.`,
-      });
+    if (errors && errors.length > 0)
+      toast({ title: "Error", description: "Failed to delete some posts", variant: "destructive" });
+    else {
+      toast({ title: "Success!", description: `${selectedPosts.size} posts deleted successfully.` });
       setSelectedPosts(new Set());
       fetchPosts();
     }
@@ -160,22 +143,19 @@ const Admin = () => {
 
   const togglePostSelection = (id: string) => {
     const newSelected = new Set(selectedPosts);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
     setSelectedPosts(newSelected);
   };
 
-  const uniqueCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean)));
+  const uniqueCategories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean)));
 
   if (!session) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
       <Navbar />
-      
+
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 mb-8 shadow-xl">
@@ -184,8 +164,8 @@ const Admin = () => {
               <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
               <p className="text-white/90">Manage your affiliate content and track performance</p>
             </div>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={handleLogout}
               className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
             >
@@ -195,22 +175,36 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Stats Cards Component */}
+        {/* Stats Cards */}
         <StatsCards posts={posts} />
 
-        {/* Add Post Button or Form */}
+        {/* Add Post Toggle */}
         {!isAdding ? (
-          <div className="mb-8">
-            <Button 
-              onClick={() => setIsAdding(true)} 
+          <div className="mb-8 flex gap-4">
+            <Button
+              onClick={() => {
+                setIsAdding(true);
+                setAddingType("product");
+              }}
               size="lg"
               className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Add New Post
+              Add Product Post
+            </Button>
+            <Button
+              onClick={() => {
+                setIsAdding(true);
+                setAddingType("news");
+              }}
+              size="lg"
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:opacity-90 shadow-lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add News Post
             </Button>
           </div>
-        ) : (
+        ) : addingType === "product" ? (
           <PostForm
             editingPost={editingPost}
             uniqueCategories={uniqueCategories}
@@ -220,9 +214,14 @@ const Admin = () => {
               setEditingPost(null);
             }}
           />
+        ) : (
+          <NewsPostForm
+            onSuccess={handleFormSuccess}
+            onCancel={() => setIsAdding(false)}
+          />
         )}
 
-        {/* Filter Component */}
+        {/* Filter & List */}
         <PostsFilter
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -233,7 +232,6 @@ const Admin = () => {
           uniqueCategories={uniqueCategories}
         />
 
-        {/* Posts List Component */}
         <PostsList
           posts={filteredPosts}
           allPosts={posts}

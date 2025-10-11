@@ -14,6 +14,17 @@ CREATE TABLE public.posts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create news_posts table for news articles
+CREATE TABLE public.news_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  sections JSONB,
+  meta_title TEXT,
+  meta_description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create email subscribers table
 CREATE TABLE public.email_subscribers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -34,6 +45,7 @@ CREATE TABLE public.user_roles (
 
 -- Enable Row Level Security
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.news_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
@@ -67,6 +79,23 @@ CREATE POLICY "Admins can update posts"
 
 CREATE POLICY "Admins can delete posts"
   ON public.posts FOR DELETE
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- RLS Policies for news_posts
+CREATE POLICY "News posts are viewable by everyone"
+  ON public.news_posts FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can insert news posts"
+  ON public.news_posts FOR INSERT
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can update news posts"
+  ON public.news_posts FOR UPDATE
+  USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can delete news posts"
+  ON public.news_posts FOR DELETE
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- RLS Policies for email subscribers
@@ -129,5 +158,10 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_posts_updated_at
   BEFORE UPDATE ON public.posts
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_news_posts_updated_at
+  BEFORE UPDATE ON public.news_posts
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();

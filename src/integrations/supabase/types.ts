@@ -26,6 +26,23 @@ export interface Post {
   updated_at?: string;
 }
 
+export interface NewsPost {
+  id: string;
+  title: string;
+  sections: Array<{
+    id: string;
+    subtitle: string;
+    description: string;
+    images: string[];
+    video: string;
+    videoType: "upload" | "url";
+  }> | null;
+  meta_title?: string;
+  meta_description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -52,6 +69,36 @@ export type Database = {
           id?: string
           name?: string
           subscribed_at?: string | null
+        }
+        Relationships: []
+      }
+      news_posts: {
+        Row: {
+          id: string
+          title: string
+          sections: Json | null
+          meta_title: string | null
+          meta_description: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          sections?: Json | null
+          meta_title?: string | null
+          meta_description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          sections?: Json | null
+          meta_title?: string | null
+          meta_description?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
