@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar } from "lucide-react";
+import { ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,17 @@ interface Post {
   title: string;
   description: string;
   image_url: string;
+  additional_images?: string[];
+  video_url?: string;
   affiliate_link: string;
   category: string;
   tags: string[];
+  price?: number;
+  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
+  affiliate_platform?: string;
+  is_featured?: boolean;
+  meta_title?: string;
+  meta_description?: string;
   created_at: string;
 }
 
@@ -22,6 +30,8 @@ const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showVideo, setShowVideo] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,6 +50,17 @@ const PostDetail = () => {
 
       if (error) throw error;
       setPost(data);
+      
+      // Set SEO meta tags if available
+      if (data?.meta_title) {
+        document.title = data.meta_title;
+      }
+      if (data?.meta_description) {
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+          metaDesc.setAttribute('content', data.meta_description);
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -56,6 +77,34 @@ const PostDetail = () => {
     { icon: Star, text: "Expert Reviewed" },
     { icon: TrendingUp, text: "Best Value" }
   ];
+
+  // Combine all images (primary + additional)
+  const allImages = post ? [post.image_url, ...(post.additional_images || [])].filter(Boolean) : [];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const getVideoEmbedUrl = (url: string) => {
+    // YouTube
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = url.includes('youtu.be') 
+        ? url.split('youtu.be/')[1]?.split('?')[0]
+        : url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    // Vimeo
+    if (url.includes('vimeo.com')) {
+      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    // Direct video file
+    return url;
+  };
 
   if (isLoading) {
     return (
@@ -123,22 +172,136 @@ const PostDetail = () => {
         <article className="max-w-6xl mx-auto">
           {/* Product Layout */}
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
-            {/* Image Section */}
+            {/* Image/Video Section */}
             <div className="space-y-4">
+              {/* Main Image/Video Display */}
               <div className="relative group overflow-hidden rounded-2xl shadow-2xl bg-gray-800">
-                <img
-                  src={post.image_url}
-                  alt={post.title}
-                  className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                {post.category && (
-                  <div className="absolute top-4 left-4">
+                {showVideo && post.video_url ? (
+                  <div className="aspect-square">
+                    {post.video_url.includes('youtube.com') || post.video_url.includes('youtu.be') || post.video_url.includes('vimeo.com') ? (
+                      <iframe
+                        src={getVideoEmbedUrl(post.video_url)}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={post.video_url}
+                        controls
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <img
+                      src={allImages[currentImageIndex]}
+                      alt={post.title}
+                      className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    
+                    {/* Image Navigation Arrows */}
+                    {allImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevImage}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronLeft className="w-6 h-6 text-white" />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronRight className="w-6 h-6 text-white" />
+                        </button>
+                      </>
+                    )}
+
+                    {/* Video Play Button Overlay */}
+                    {post.video_url && !showVideo && (
+                      <button
+                        onClick={() => setShowVideo(true)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors"
+                      >
+                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                          <Play className="w-8 h-8 text-black ml-1" fill="currentColor" />
+                        </div>
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {post.category && (
                     <span className="inline-block px-4 py-2 bg-white/95 backdrop-blur-sm text-black rounded-full text-sm font-bold shadow-lg">
                       {post.category}
+                    </span>
+                  )}
+                  {post.is_featured && (
+                    <span className="inline-flex items-center gap-1 px-4 py-2 bg-yellow-500/95 backdrop-blur-sm text-black rounded-full text-sm font-bold shadow-lg">
+                      <Star className="w-4 h-4 fill-current" />
+                      Featured
+                    </span>
+                  )}
+                </div>
+
+                {/* Stock Status Badge */}
+                {post.stock_status && (
+                  <div className="absolute top-4 right-4">
+                    <span className={`inline-block px-4 py-2 backdrop-blur-sm rounded-full text-sm font-bold shadow-lg ${
+                      post.stock_status === 'in_stock' 
+                        ? 'bg-green-500/95 text-white' 
+                        : post.stock_status === 'limited'
+                        ? 'bg-orange-500/95 text-white'
+                        : 'bg-red-500/95 text-white'
+                    }`}>
+                      {post.stock_status === 'in_stock' ? '✓ In Stock' : 
+                       post.stock_status === 'limited' ? '⚠ Limited Stock' : '✗ Out of Stock'}
                     </span>
                   </div>
                 )}
               </div>
+
+              {/* Thumbnail Gallery */}
+              {allImages.length > 1 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {allImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setCurrentImageIndex(index);
+                        setShowVideo(false);
+                      }}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        currentImageIndex === index && !showVideo
+                          ? 'border-white scale-105'
+                          : 'border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${post.title} - ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                  {post.video_url && (
+                    <button
+                      onClick={() => setShowVideo(true)}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-800 flex items-center justify-center ${
+                        showVideo
+                          ? 'border-white scale-105'
+                          : 'border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <Play className="w-8 h-8 text-white" fill="currentColor" />
+                    </button>
+                  )}
+                </div>
+              )}
               
               {/* Trust Badges */}
               <div className="grid grid-cols-3 gap-3">
@@ -162,9 +325,21 @@ const PostDetail = () => {
                 </h1>
                 
                 {/* Meta Info */}
-                <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-400">
+                <div className="flex flex-wrap items-center gap-4 mb-6 text-sm">
+                  {post.price && (
+                    <div className="flex items-center gap-1.5 text-green-400 font-bold text-2xl">
+                      <DollarSign className="w-6 h-6" />
+                      <span>{post.price.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {post.affiliate_platform && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">
+                      <Package className="w-4 h-4" />
+                      <span className="font-medium">{post.affiliate_platform}</span>
+                    </div>
+                  )}
                   {post.created_at && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 text-gray-400">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(post.created_at).toLocaleDateString('en-US', { 
                         month: 'long', 
@@ -181,7 +356,7 @@ const PostDetail = () => {
                     <CheckCircle className="w-5 h-5 text-green-500" />
                     Product Details
                   </h2>
-                  <p className="text-gray-400 leading-relaxed text-lg">
+                  <p className="text-gray-400 leading-relaxed text-lg whitespace-pre-wrap">
                     {post.description}
                   </p>
                 </div>
@@ -215,7 +390,11 @@ const PostDetail = () => {
                   </div>
                   <div>
                     <h3 className="font-bold mb-1 text-white">Exclusive Offer</h3>
-                    <p className="text-sm text-gray-400">Get this premium product with our special affiliate pricing</p>
+                    <p className="text-sm text-gray-400">
+                      {post.price 
+                        ? `Get this premium product for only $${post.price.toFixed(2)}`
+                        : 'Get this premium product with our special affiliate pricing'}
+                    </p>
                   </div>
                 </div>
                 
@@ -228,9 +407,16 @@ const PostDetail = () => {
                   <Button 
                     size="lg" 
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+                    disabled={post.stock_status === 'out_of_stock'}
                   >
-                    <span>Shop This Product Now</span>
-                    <ExternalLink className="w-5 h-5 ml-2" />
+                    <span>
+                      {post.stock_status === 'out_of_stock' 
+                        ? 'Currently Unavailable' 
+                        : 'Shop This Product Now'}
+                    </span>
+                    {post.stock_status !== 'out_of_stock' && (
+                      <ExternalLink className="w-5 h-5 ml-2" />
+                    )}
                   </Button>
                 </a>
                 
