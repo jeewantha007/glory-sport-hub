@@ -1,6 +1,6 @@
 import { Edit, Trash2, Video, ExternalLink, Star, TrendingUp, BarChart3, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Post } from "@/lib/types";
+import { Post } from "@/integrations/supabase/types";
 
 interface PostsListProps {
   posts: Post[];

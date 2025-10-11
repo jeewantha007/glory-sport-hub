@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { postService } from "@/services";
-import { Post } from "@/lib/types";
+import { Post } from "@/integrations/supabase/types";
 
 interface PostFormProps {
   editingPost: Post | null;

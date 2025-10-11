@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Post } from "@/lib/types";
+import { Post } from "@/integrations/supabase/types";
 
 export const postService = {
   // Fetch all posts

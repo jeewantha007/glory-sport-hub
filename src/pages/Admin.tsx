@@ -12,7 +12,7 @@ import PostForm from "./admin/PostForm";
 import PostsFilter from "./admin/PostsFilter";
 import PostsList from "./admin/PostsList";
 import { postService, authService } from "@/services";
-import { Post } from "@/lib/types";
+import { Post } from "@/integrations/supabase/types";
 
 const Admin = () => {
   const [session, setSession] = useState<Session | null>(null);
