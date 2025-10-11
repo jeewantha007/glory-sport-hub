@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import PostDetail from "./pages/PostDetail";
 import NewsDetails from "./pages/NewsDetails";
-import NewsList from "./pages/NewsList";
+import NewsList from "./pages/admin/NewsList";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
