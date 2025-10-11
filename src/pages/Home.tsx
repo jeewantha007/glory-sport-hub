@@ -4,9 +4,12 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 import PostCard from "@/components/PostCard";
+import NewsPostCard from "@/components/NewsPostCard";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { newsService } from "@/services";
+import { Link } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 import EmailSubscribeForm from "@/components/EmailSubscribeForm";
 
@@ -20,14 +23,23 @@ interface Post {
   tags: string[];
 }
 
+interface NewsPost {
+  id: string;
+  title: string;
+  meta_description?: string;
+  created_at?: string;
+}
+
 const Home = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPosts();
+    fetchNewsPosts();
   }, []);
 
   const fetchPosts = async () => {
@@ -47,6 +59,22 @@ const Home = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchNewsPosts = async () => {
+    try {
+      const { data, error } = await newsService.fetchAllNews();
+      
+      if (error) throw error;
+      // Get only the 4 most recent news posts
+      setNewsPosts(data?.slice(0, 4) || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load news. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -126,6 +154,30 @@ const Home = () => {
           )}
         </div>
       </section>
+
+      {/* News Section */}
+      {!searchQuery && (
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-white">Latest News</h2>
+            <Link to="/news" className="text-primary hover:underline">
+              View All News
+            </Link>
+          </div>
+          
+          {newsPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newsPosts.map((post) => (
+                <NewsPostCard key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-900 rounded-xl border border-gray-800">
+              <p className="text-gray-400">No news posts available yet.</p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Stats/Trust Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
