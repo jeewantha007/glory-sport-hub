@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EmailPopup from "@/components/EmailPopup";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,9 +22,8 @@ interface Post {
   stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
   affiliate_platform?: string;
   is_featured?: boolean;
-  meta_title?: string;
-  meta_description?: string;
   created_at: string;
+  updated_at: string;
 }
 
 const PostDetail = () => {
@@ -51,15 +51,9 @@ const PostDetail = () => {
       if (error) throw error;
       setPost(data);
       
-      // Set SEO meta tags if available
-      if (data?.meta_title) {
-        document.title = data.meta_title;
-      }
-      if (data?.meta_description) {
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) {
-          metaDesc.setAttribute('content', data.meta_description);
-        }
+      // Set page title
+      if (data?.title) {
+        document.title = data.title;
       }
     } catch (error: any) {
       toast({
@@ -458,6 +452,7 @@ const PostDetail = () => {
       </main>
 
       <Footer />
+      <EmailPopup />
     </div>
   );
 };
