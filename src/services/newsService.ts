@@ -21,5 +21,16 @@ export const newsService = {
       .single();
 
     return { data, error };
+  },
+
+  // Fetch a single news post by slug
+  async fetchNewsBySlug(slug: string) {
+    const { data, error } = await supabase
+      .from("news_posts")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    return { data, error };
   }
 };

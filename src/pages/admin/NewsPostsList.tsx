@@ -144,7 +144,7 @@ const NewsPostsList = ({
                     asChild
                     className="hover:bg-primary/10 hover:text-primary hover:border-primary"
                   >
-                    <Link to={`/news/${post.id}`}>
+                    <Link to={`/news/${post.slug || post.id}`}>
                       <Newspaper className="w-4 h-4 mr-1" />
                       View
                     </Link>

@@ -18,6 +18,7 @@ interface NewsPost {
   meta_description?: string;
   created_at?: string;
   sections?: string | Section[];
+  slug?: string;
 }
 
 interface NewsPostCardProps {
@@ -100,7 +101,7 @@ const NewsPostCard = ({ post }: NewsPostCardProps) => {
           asChild
           className="text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 group/btn"
         >
-          <Link to={`/news/${post.id}`} className="flex items-center gap-2">
+          <Link to={`/news/${post.slug || post.id}`} className="flex items-center gap-2">
             Read More
             <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>

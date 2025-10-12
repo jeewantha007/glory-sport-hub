@@ -42,6 +42,7 @@ export interface NewsPost {
   meta_description?: string;
   created_at?: string;
   updated_at?: string;
+  slug?: string;
 }
 
 export type Database = {
@@ -82,6 +83,7 @@ export type Database = {
           meta_description: string | null
           created_at: string | null
           updated_at: string | null
+          slug: string | null
         }
         Insert: {
           id?: string
@@ -91,6 +93,7 @@ export type Database = {
           meta_description?: string | null
           created_at?: string | null
           updated_at?: string | null
+          slug?: string | null
         }
         Update: {
           id?: string
@@ -100,6 +103,7 @@ export type Database = {
           meta_description?: string | null
           created_at?: string | null
           updated_at?: string | null
+          slug?: string | null
         }
         Relationships: []
       }

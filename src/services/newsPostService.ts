@@ -2,6 +2,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { NewsPost } from "@/integrations/supabase/types";
 import { Json } from "@/integrations/supabase/types";
 
+/**
+ * Generate a unique slug based on the news post title.
+ */
+const generateUniqueSlug = async (title: string) => {
+  const baseSlug = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-") // spaces/special chars → hyphens
+    .replace(/^-+|-+$/g, "");    // remove leading/trailing hyphens
+
+  let slug = baseSlug;
+  let count = 1;
+
+  while (true) {
+    const { data } = await supabase
+      .from("news_posts")
+      .select("id")
+      .eq("slug", slug)
+      .single();
+
+    if (!data) break; // slug is unique
+    slug = `${baseSlug}-${count++}`;
+  }
+
+  return slug;
+};
+
 // Define the section structure
 interface Section {
   id: string;
@@ -45,11 +72,25 @@ export const newsPostService = {
     return { data, error };
   },
 
-  // Create a new news post
+  // Fetch a single news post by slug
+  async fetchNewsPostBySlug(slug: string) {
+    const { data, error } = await supabase
+      .from("news_posts")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    return { data, error };
+  },
+
+  // Create a new news post with automatic slug
   async createNewsPost(postData: NewsPostCreate) {
+    const slug = await generateUniqueSlug(postData.title);
+    
     // Convert sections to JSON-compatible format
     const postDataJson: any = {
       ...postData,
+      slug,
       sections: postData.sections ? JSON.stringify(postData.sections) as unknown as Json : null
     };
 
@@ -62,17 +103,22 @@ export const newsPostService = {
     return { data, error };
   },
 
-  // Update an existing news post
+  // Update an existing news post (regenerate slug if title changed)
   async updateNewsPost(id: string, postData: NewsPostUpdate) {
+    let updateData: any = { ...postData };
+
+    if (postData.title) {
+      // Regenerate slug if title changed
+      const slug = await generateUniqueSlug(postData.title);
+      updateData.slug = slug;
+    }
+
     // Convert sections to JSON-compatible format
-    const postDataJson: any = {
-      ...postData,
-      sections: postData.sections ? JSON.stringify(postData.sections) as unknown as Json : null
-    };
+    updateData.sections = postData.sections ? JSON.stringify(postData.sections) as unknown as Json : null;
 
     const { data, error } = await supabase
       .from("news_posts")
-      .update(postDataJson)
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();

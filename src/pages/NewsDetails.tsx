@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { newsService } from "@/services";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, Clock, Play } from "lucide-react";
@@ -14,19 +14,46 @@ interface Section {
 }
 
 const NewsDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
+  const navigate = useNavigate();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPost = async () => {
-      if (!id) return;
+      if (!identifier) {
+        setError("No identifier provided");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const { data, error } = await newsService.fetchNewsById(id);
+        let data, error;
+
+        // Check if the identifier looks like a slug (contains letters and hyphens)
+        if (identifier.includes('-') && /[a-z]/.test(identifier)) {
+          // Treat it as a slug
+          const result = await newsService.fetchNewsBySlug(identifier);
+          data = result.data;
+          error = result.error;
+        } else {
+          // Treat it as an ID
+          const result = await newsService.fetchNewsById(identifier);
+          data = result.data;
+          error = result.error;
+        }
+        
         if (error) throw error;
+        if (!data) throw new Error("News post not found");
+        
         setPost(data);
+        
+        // If we fetched by ID but the post has a slug, redirect to the slug URL
+        if (identifier && data.slug && data.slug !== identifier) {
+          navigate(`/news/${data.slug}`, { replace: true });
+        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch news post");
       } finally {
@@ -34,7 +61,7 @@ const NewsDetails = () => {
       }
     };
     fetchPost();
-  }, [id]);
+  }, [identifier, navigate]);
 
   if (loading) {
     return (
