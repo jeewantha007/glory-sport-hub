@@ -3,12 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Calendar, ArrowRight } from "lucide-react";
 
+interface Section {
+  id: string;
+  subtitle?: string;
+  description?: string;
+  images?: string[];
+  video?: string;
+  videoType?: string;
+}
+
 interface NewsPost {
   id: string;
   title: string;
   meta_description?: string;
   created_at?: string;
-  image_url?: string;
+  sections?: string | Section[];
 }
 
 interface NewsPostCardProps {
@@ -16,6 +25,30 @@ interface NewsPostCardProps {
 }
 
 const NewsPostCard = ({ post }: NewsPostCardProps) => {
+  // Parse the first image from sections JSON
+  const getFirstSectionImage = (sections?: string | Section[]): string | null => {
+    if (!sections) return null;
+
+    try {
+      const parsed: Section[] = Array.isArray(sections)
+        ? sections
+        : JSON.parse(sections);
+
+      for (const section of parsed) {
+        if (section.images && section.images.length > 0) {
+          return section.images[0];
+        }
+      }
+    } catch (err) {
+      console.error("Failed to parse sections:", err);
+    }
+    return null;
+  };
+
+  const firstImage =
+    getFirstSectionImage(post.sections) ||
+    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=400&fit=crop";
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -26,11 +59,14 @@ const NewsPostCard = ({ post }: NewsPostCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group border-none" style={{ backgroundColor: '#05070b' }}>
+    <Card
+      className="overflow-hidden hover:shadow-2xl transition-all duration-300 group border-none"
+      style={{ backgroundColor: "#05070b" }}
+    >
       {/* Image Section */}
-      <div className="relative overflow-hidden h-48">
+      <div className="relative overflow-hidden h-48 bg-black flex items-center justify-center">
         <img
-          src={post.image_url || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=400&fit=crop"}
+          src={firstImage}
           alt={post.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -58,10 +94,10 @@ const NewsPostCard = ({ post }: NewsPostCardProps) => {
             <span>{formatDate(post.created_at)}</span>
           </div>
         )}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          asChild 
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
           className="text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 group/btn"
         >
           <Link to={`/news/${post.id}`} className="flex items-center gap-2">

@@ -68,8 +68,7 @@ const Home = () => {
       const { data, error } = await newsService.fetchAllNews();
       
       if (error) throw error;
-      // Get only the 4 most recent news posts
-      setNewsPosts(data?.slice(0, 4) || []);
+      setNewsPosts(data?.slice(0, 3) || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -127,7 +126,6 @@ const Home = () => {
             </div>
           </div>
         </div>
-        {/* Decorative wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg className="w-full h-16 text-black" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
@@ -156,30 +154,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* News Section */}
-      {!searchQuery && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-white">Latest News</h2>
-            <Link to="/news" className="text-primary hover:underline">
-              View All News
-            </Link>
-          </div>
-          
-          {newsPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {newsPosts.map((post) => (
-                <NewsPostCard key={post.id} post={post} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-gray-900 rounded-xl border border-gray-800">
-              <p className="text-gray-400">No news posts available yet.</p>
-            </div>
-          )}
-        </section>
-      )}
-
       {/* Stats/Trust Bar */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
@@ -197,95 +171,115 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Section Header */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-              {searchQuery ? "Search Results" : "Featured Sports Gear"}
-            </h2>
-            <p className="text-gray-400 text-lg">
-              {searchQuery 
-                ? `Showing results for "${searchQuery}"`
-                : "Hand-picked equipment and gear to elevate your game"
-              }
-            </p>
-          </div>
-          {!searchQuery && (
-            <Button asChild variant="outline" className="hidden md:block">
-              <Link to="/products">
-                View All Products
-              </Link>
-            </Button>
-          )}
-        </div>
-        {!searchQuery && (
-          <div className="text-center md:hidden mb-4">
-            <Button asChild variant="outline">
-              <Link to="/products">
-                View All Products
-              </Link>
-            </Button>
-          </div>
-        )}
-      </section>
-
-      {/* Posts Grid */}
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-gray-900 rounded-xl p-4 animate-pulse shadow-lg border border-gray-800">
-                <div className="aspect-square bg-gray-800 rounded-lg mb-4" />
-                <div className="h-5 bg-gray-800 rounded-lg mb-3" />
-                <div className="h-4 bg-gray-800 rounded-lg w-2/3 mb-2" />
-                <div className="h-4 bg-gray-800 rounded-lg w-1/2" />
+      {/* Main Content Container */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+          
+          {/* Products Section - 3/4 width */}
+          <div className="xl:col-span-3">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-2 text-white">
+                  {searchQuery ? "Search Results" : "Featured Sports Gear"}
+                </h2>
+                <p className="text-gray-400">
+                  {searchQuery 
+                    ? `Showing results for "${searchQuery}"`
+                    : "Hand-picked equipment and gear to elevate your game"
+                  }
+                </p>
               </div>
-            ))}
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <div className="text-center py-20 bg-gray-900 rounded-2xl shadow-lg border border-gray-800">
-            <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800">
-              <Search className="w-8 h-8 text-gray-600" />
+              {!searchQuery && (
+                <Button asChild variant="outline" className="hidden md:flex">
+                  <Link to="/products">View All</Link>
+                </Button>
+              )}
             </div>
-            <h3 className="text-2xl font-semibold mb-2 text-white">
-              {searchQuery ? "No results found" : "No products yet"}
-            </h3>
-            <p className="text-gray-400 text-lg max-w-md mx-auto">
-              {searchQuery 
-                ? "Try adjusting your search terms or browse all categories"
-                : "Check back soon for exciting new products"
-              }
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="mt-6 px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-              >
-                Clear Search
-              </button>
+
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-gray-900 rounded-xl p-4 animate-pulse shadow-lg border border-gray-800">
+                    <div className="aspect-square bg-gray-800 rounded-lg mb-4" />
+                    <div className="h-5 bg-gray-800 rounded-lg mb-3" />
+                    <div className="h-4 bg-gray-800 rounded-lg w-2/3 mb-2" />
+                    <div className="h-4 bg-gray-800 rounded-lg w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="text-center py-20 bg-gray-900 rounded-2xl shadow-lg border border-gray-800">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800">
+                  <Search className="w-8 h-8 text-gray-600" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-2 text-white">
+                  {searchQuery ? "No results found" : "No products yet"}
+                </h3>
+                <p className="text-gray-400 text-lg max-w-md mx-auto">
+                  {searchQuery 
+                    ? "Try adjusting your search terms or browse all categories"
+                    : "Check back soon for exciting new products"
+                  }
+                </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="mt-6 px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPosts.map((post, index) => (
+                  <div
+                    key={post.id}
+                    className="animate-in fade-in slide-in-from-bottom duration-500"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <PostCard
+                      id={post.id}
+                      title={post.title}
+                      description={post.description}
+                      imageUrl={post.image_url || ""}
+                      affiliateLink={post.affiliate_link}
+                    />
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredPosts.map((post, index) => (
-              <div
-                key={post.id}
-                className="animate-in fade-in slide-in-from-bottom duration-500"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <PostCard
-                  id={post.id}
-                  title={post.title}
-                  description={post.description}
-                  imageUrl={post.image_url || ""}
-                  affiliateLink={post.affiliate_link}
-                />
+
+          {/* News Sidebar - 1/4 width */}
+          {!searchQuery && (
+            <div className="xl:col-span-1">
+              <div className="sticky top-4">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-white">Latest News</h3>
+                  <Link to="/news" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    View All
+                  </Link>
+                </div>
+                
+                {newsPosts.length > 0 ? (
+                  <div className="space-y-6">
+                    {newsPosts.map((post) => (
+                      <NewsPostCard key={post.id} post={post} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-gray-900 rounded-xl border border-gray-800">
+                    <p className="text-gray-400">No news posts available yet.</p>
+                  </div>
+                )}
+
+
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Call to Action Banner */}
       {!searchQuery && filteredPosts.length > 0 && (
@@ -297,7 +291,7 @@ const Home = () => {
             <p className="text-gray-300 text-lg mb-6 max-w-2xl mx-auto">
               Subscribe to get the latest sports gear recommendations and special offers delivered to your inbox
             </p>
-           <EmailSubscribeForm/>
+            <EmailSubscribeForm />
           </div>
         </section>
       )}

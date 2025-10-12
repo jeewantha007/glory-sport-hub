@@ -24,6 +24,7 @@ export interface Post {
   meta_description?: string;
   created_at?: string;
   updated_at?: string;
+  slug?: string;
 }
 
 export interface NewsPost {

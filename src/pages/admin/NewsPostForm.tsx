@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, X, Loader2, Plus, GripVertical, Link } from "lucide-react";
+import { Upload, X, Plus, GripVertical, Link } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { newsPostService, type NewsPostCreate, type NewsPostUpdate } from "@/services/newsPostService";
 import {
@@ -25,7 +25,7 @@ interface Section {
   description: string;
   images: string[];
   video: string;
-  videoType: "upload" | "url"; // New field to track video type
+  videoType: "upload" | "url";
 }
 
 interface NewsPostFormProps {
@@ -34,11 +34,7 @@ interface NewsPostFormProps {
   onCancel: () => void;
 }
 
-const NewsPostForm = ({
-  editingPost,
-  onSuccess,
-  onCancel,
-}: NewsPostFormProps) => {
+const NewsPostForm = ({ editingPost, onSuccess, onCancel }: NewsPostFormProps) => {
   const [title, setTitle] = useState("");
   const [sections, setSections] = useState<Section[]>([]);
   const [metaTitle, setMetaTitle] = useState("");
@@ -47,23 +43,20 @@ const NewsPostForm = ({
 
   const { toast } = useToast();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     if (editingPost) {
       setTitle(editingPost.title);
       setMetaTitle(editingPost.meta_title || "");
       setMetaDescription(editingPost.meta_description || "");
-      // Parse sections from JSON if they exist
       if (editingPost.sections) {
         try {
-          const parsedSections = Array.isArray(editingPost.sections) 
-            ? editingPost.sections 
-            : typeof editingPost.sections === 'string' 
-              ? JSON.parse(editingPost.sections)
-              : [];
+          const parsedSections = Array.isArray(editingPost.sections)
+            ? editingPost.sections
+            : typeof editingPost.sections === "string"
+            ? JSON.parse(editingPost.sections)
+            : [];
           setSections(parsedSections);
         } catch (e) {
           console.error("Failed to parse sections", e);
@@ -84,7 +77,7 @@ const NewsPostForm = ({
         description: "",
         images: [],
         video: "",
-        videoType: "upload", // Default to upload
+        videoType: "upload",
       },
     ]);
   };
@@ -94,33 +87,19 @@ const NewsPostForm = ({
   };
 
   const updateSection = (id: string, updated: Partial<Section>) => {
-    setSections(
-      sections.map((sec) => (sec.id === id ? { ...sec, ...updated } : sec))
-    );
+    setSections(sections.map((sec) => (sec.id === id ? { ...sec, ...updated } : sec)));
   };
 
   const handleImageUpload = async (file: File, sectionId: string) => {
     if (!file.type.startsWith("image/"))
-      return toast({
-        title: "Invalid file",
-        description: "Select image",
-        variant: "destructive",
-      });
+      return toast({ title: "Invalid file", description: "Select an image", variant: "destructive" });
     if (file.size > 5 * 1024 * 1024)
-      return toast({
-        title: "File too large",
-        description: "Max 5MB",
-        variant: "destructive",
-      });
+      return toast({ title: "File too large", description: "Max 5MB", variant: "destructive" });
 
     setUploading(true);
     const { url, error } = await newsPostService.uploadFile(file, "post-images");
     if (error) {
-      toast({
-        title: "Upload Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Upload Error", description: error.message, variant: "destructive" });
     } else if (url) {
       const sec = sections.find((s) => s.id === sectionId)!;
       updateSection(sectionId, { images: [...sec.images, url] });
@@ -130,45 +109,26 @@ const NewsPostForm = ({
 
   const addImageUrl = (imageUrl: string, sectionId: string) => {
     if (!imageUrl.trim()) return;
-    
-    // Simple validation for URL
     try {
       new URL(imageUrl);
-    } catch (e) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid image URL",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Invalid URL", description: "Please enter a valid image URL", variant: "destructive" });
       return;
     }
-
     const sec = sections.find((s) => s.id === sectionId)!;
     updateSection(sectionId, { images: [...sec.images, imageUrl] });
   };
 
   const handleVideoUpload = async (file: File, sectionId: string) => {
     if (!file.type.startsWith("video/"))
-      return toast({
-        title: "Invalid file",
-        description: "Select video",
-        variant: "destructive",
-      });
+      return toast({ title: "Invalid file", description: "Select a video", variant: "destructive" });
     if (file.size > 50 * 1024 * 1024)
-      return toast({
-        title: "File too large",
-        description: "Max 50MB",
-        variant: "destructive",
-      });
+      return toast({ title: "File too large", description: "Max 50MB", variant: "destructive" });
 
     setUploading(true);
     const { url, error } = await newsPostService.uploadFile(file, "post-videos");
     if (error) {
-      toast({
-        title: "Upload Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Upload Error", description: error.message, variant: "destructive" });
     } else if (url) {
       updateSection(sectionId, { video: url, videoType: "upload" });
     }
@@ -177,23 +137,15 @@ const NewsPostForm = ({
 
   const addVideoUrl = (url: string, sectionId: string) => {
     if (!url.trim()) return;
-    
-    // Simple validation for URL
     try {
       new URL(url);
-    } catch (e) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid video URL",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Invalid URL", description: "Please enter a valid video URL", variant: "destructive" });
       return;
     }
-
     updateSection(sectionId, { video: url, videoType: "url" });
   };
 
-  // Reorder sections
   const onDragEndSections = (event: any) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -203,7 +155,6 @@ const NewsPostForm = ({
     }
   };
 
-  // Reorder images inside a section
   const onDragEndImages = (event: any, sectionId: string) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -221,10 +172,18 @@ const NewsPostForm = ({
     if (!title.trim())
       return toast({ title: "Title required", variant: "destructive" });
 
-    // Prepare the post data with proper typing
+    const filteredSections = sections.map((sec) => ({
+      ...sec,
+      subtitle: sec.subtitle?.trim() || "",
+      description: sec.description?.trim() || "",
+      images: sec.images || [],
+      video: sec.video || "",
+      videoType: sec.videoType || "upload",
+    }));
+
     const postData: NewsPostCreate | NewsPostUpdate = {
       title,
-      sections: sections.length > 0 ? sections : null,
+      sections: filteredSections.length > 0 ? filteredSections : null,
       meta_title: metaTitle || undefined,
       meta_description: metaDescription || undefined,
     };
@@ -238,19 +197,13 @@ const NewsPostForm = ({
       toast({ title: "Success", description: "Post saved successfully" });
       onSuccess();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
   return (
     <div className="bg-card rounded-2xl p-8 shadow-xl border border-border/50">
-      <h2 className="text-3xl font-bold mb-6">
-        {editingPost ? "Edit News Post" : "Create News Post"}
-      </h2>
+      <h2 className="text-3xl font-bold mb-6">{editingPost ? "Edit News Post" : "Create News Post"}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
@@ -261,7 +214,6 @@ const NewsPostForm = ({
           required
         />
 
-        {/* SEO */}
         <Input
           value={metaTitle}
           onChange={(e) => setMetaTitle(e.target.value)}
@@ -281,96 +233,67 @@ const NewsPostForm = ({
         <div>
           <div className="flex justify-between mb-2">
             <h3 className="font-semibold text-lg">Sections</h3>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={addSection}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={addSection}>
               <Plus className="w-4 h-4 mr-1" />
               Add Section
             </Button>
           </div>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={onDragEndSections}
-          >
-            <SortableContext
-              items={sections.map((s) => s.id)}
-              strategy={verticalListSortingStrategy}
-            >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEndSections}>
+            <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
               {sections.map((sec) => (
                 <SortableItem key={sec.id} id={sec.id}>
                   <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/10 relative">
                     <div className="absolute top-2 right-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => removeSection(sec.id)}
-                      >
+                      <Button type="button" size="icon" variant="ghost" onClick={() => removeSection(sec.id)}>
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
 
                     <div className="flex items-center gap-2 mb-2 cursor-grab">
-                      <GripVertical  className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-muted-foreground font-medium">
-                        Drag to reorder section
-                      </span>
+                      <GripVertical className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-muted-foreground font-medium">Drag to reorder section</span>
                     </div>
 
                     <Input
                       value={sec.subtitle}
-                      onChange={(e) =>
-                        updateSection(sec.id, { subtitle: e.target.value })
-                      }
+                      onChange={(e) => updateSection(sec.id, { subtitle: e.target.value })}
                       placeholder="Section subtitle"
                       className="h-10"
                     />
                     <Textarea
                       value={sec.description}
-                      onChange={(e) =>
-                        updateSection(sec.id, { description: e.target.value })
-                      }
+                      onChange={(e) => updateSection(sec.id, { description: e.target.value })}
                       rows={4}
                       placeholder="Section description"
-                      required
                     />
 
-                    {/* Images - Upload and URL options */}
+                    {/* Images */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Images</span>
                         <div className="flex gap-2">
-                          {/* Upload image button */}
                           <label className="flex items-center justify-center w-8 h-8 border rounded-md cursor-pointer hover:bg-muted">
                             <Upload className="w-4 h-4" />
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
-                              onChange={(e) =>
-                                e.target.files?.[0] &&
-                                handleImageUpload(e.target.files[0], sec.id)
-                              }
+                              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], sec.id)}
                             />
                           </label>
-                          
-                          {/* Add image URL button */}
+
                           <div className="flex items-center">
                             <Input
                               type="text"
                               placeholder="Image URL"
                               className="h-8 text-sm w-40"
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (e.key === "Enter") {
                                   e.preventDefault();
                                   const target = e.target as HTMLInputElement;
                                   addImageUrl(target.value, sec.id);
-                                  target.value = '';
+                                  target.value = "";
                                 }
                               }}
                             />
@@ -383,7 +306,7 @@ const NewsPostForm = ({
                                 const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
                                 if (input) {
                                   addImageUrl(input.value, sec.id);
-                                  input.value = '';
+                                  input.value = "";
                                 }
                               }}
                             >
@@ -392,25 +315,18 @@ const NewsPostForm = ({
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Display images */}
+
                       <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={(e) => onDragEndImages(e, sec.id)}
                       >
-                        <SortableContext
-                          items={sec.images}
-                          strategy={verticalListSortingStrategy}
-                        >
+                        <SortableContext items={sec.images} strategy={verticalListSortingStrategy}>
                           <div className="flex flex-wrap gap-2">
                             {sec.images.map((img) => (
                               <SortableItem key={img} id={img}>
                                 <div className="relative">
-                                  <img
-                                    src={img}
-                                    className="w-24 h-24 object-cover rounded-md border"
-                                  />
+                                  <img src={img} className="w-24 h-24 object-cover rounded-md border" />
                                   <Button
                                     type="button"
                                     size="icon"
@@ -418,9 +334,7 @@ const NewsPostForm = ({
                                     className="absolute top-0 right-0"
                                     onClick={() =>
                                       updateSection(sec.id, {
-                                        images: sec.images.filter(
-                                          (i) => i !== img
-                                        ),
+                                        images: sec.images.filter((i) => i !== img),
                                       })
                                     }
                                   >
@@ -434,12 +348,11 @@ const NewsPostForm = ({
                       </DndContext>
                     </div>
 
-                    {/* Video - Upload and URL options */}
+                    {/* Video */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Video</span>
                         <div className="flex gap-2">
-                          {/* Upload video button */}
                           <label className="flex items-center justify-center w-8 h-8 border rounded-md cursor-pointer hover:bg-muted">
                             <Upload className="w-4 h-4" />
                             <input
@@ -447,24 +360,22 @@ const NewsPostForm = ({
                               accept="video/*"
                               className="hidden"
                               onChange={(e) =>
-                                e.target.files?.[0] &&
-                                handleVideoUpload(e.target.files[0], sec.id)
+                                e.target.files?.[0] && handleVideoUpload(e.target.files[0], sec.id)
                               }
                             />
                           </label>
-                          
-                          {/* Add video URL button */}
+
                           <div className="flex items-center">
                             <Input
                               type="text"
                               placeholder="Video URL (YouTube, etc.)"
                               className="h-8 text-sm w-40"
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (e.key === "Enter") {
                                   e.preventDefault();
                                   const target = e.target as HTMLInputElement;
                                   addVideoUrl(target.value, sec.id);
-                                  target.value = '';
+                                  target.value = "";
                                 }
                               }}
                             />
@@ -477,7 +388,7 @@ const NewsPostForm = ({
                                 const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
                                 if (input) {
                                   addVideoUrl(input.value, sec.id);
-                                  input.value = '';
+                                  input.value = "";
                                 }
                               }}
                             >
@@ -486,33 +397,32 @@ const NewsPostForm = ({
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Display video */}
-                      <div>
-                        {sec.video ? (
-                          <div className="flex items-center gap-2">
-                            {sec.videoType === "upload" ? (
-                              <video
-                                src={sec.video}
-                                controls
-                                className="w-64 h-36 object-cover rounded-md"
-                              />
-                            ) : (
-                              <div className="w-64 h-36 bg-muted rounded-md flex items-center justify-center">
-                                <span className="text-sm text-muted-foreground">External Video: {sec.video}</span>
-                              </div>
-                            )}
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => updateSection(sec.id, { video: "", videoType: "upload" })}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ) : null}
-                      </div>
+
+                      {sec.video ? (
+                        <div className="flex items-center gap-2">
+                          {sec.videoType === "upload" ? (
+                            <video
+                              src={sec.video}
+                              controls
+                              className="w-64 h-36 object-cover rounded-md"
+                            />
+                          ) : (
+                            <div className="w-64 h-36 bg-muted rounded-md flex items-center justify-center">
+                              <span className="text-sm text-muted-foreground">
+                                External Video: {sec.video}
+                              </span>
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => updateSection(sec.id, { video: "", videoType: "upload" })}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </SortableItem>
@@ -522,10 +432,7 @@ const NewsPostForm = ({
         </div>
 
         <div className="flex gap-4 pt-4">
-          <Button
-            type="submit"
-            className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-          >
+          <Button type="submit" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90">
             Save Post
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
