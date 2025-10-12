@@ -10,6 +10,7 @@ CREATE TABLE public.posts (
   affiliate_link TEXT NOT NULL,
   category TEXT,
   tags TEXT[],
+  slug TEXT UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

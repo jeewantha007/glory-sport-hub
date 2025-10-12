@@ -206,7 +206,7 @@ const PostsList = ({
                     asChild
                     className="hover:bg-primary/10 hover:text-primary hover:border-primary"
                   >
-                    <Link to={`/post/${post.id}`}>
+                    <Link to={post.slug ? `/post/${post.slug}` : `/post/${post.id}`}>
                       <ExternalLink className="w-4 h-4 mr-1" />
                       View
                     </Link>

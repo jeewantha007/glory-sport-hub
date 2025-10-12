@@ -16,6 +16,7 @@ interface PostCardProps {
   is_featured?: boolean;
   video_url?: string;
   additional_images?: string[];
+  slug?: string;
 }
 
 const PostCard = ({ 
@@ -31,13 +32,15 @@ const PostCard = ({
   affiliate_platform,
   is_featured,
   video_url,
-  additional_images
+  additional_images,
+  slug
 }: PostCardProps) => {
   const hasMultipleMedia = (additional_images && additional_images.length > 0) || video_url;
+  const postUrl = slug ? `/post/${slug}` : `/post/${id}`;
 
   return (
     <div className="group bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-800 hover:-translate-y-2">
-      <Link to={`/post/${id}`}>
+      <Link to={postUrl}>
         <div className="relative overflow-hidden aspect-square bg-gray-800">
           <img
             src={imageUrl}
@@ -125,7 +128,7 @@ const PostCard = ({
           </div>
         )}
 
-        <Link to={`/post/${id}`}>
+        <Link to={postUrl}>
           <h3 className="font-bold text-lg mb-2 group-hover:text-white transition-colors line-clamp-2 leading-tight text-white">
             {title}
           </h3>

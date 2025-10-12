@@ -206,7 +206,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const postData: Omit<Post, "id"> = {
+    const postData: Omit<Post, "id" | "slug"> = {
       title,
       description,
       image_url: imageUrl,

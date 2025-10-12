@@ -16,6 +16,11 @@ interface Post {
   tags: string[];
   price?: number;
   is_featured?: boolean;
+  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
+  affiliate_platform?: string;
+  video_url?: string;
+  additional_images?: string[];
+  slug?: string;
 }
 
 const ProductList = () => {
@@ -209,6 +214,15 @@ const ProductList = () => {
                     description={post.description}
                     imageUrl={post.image_url || ""}
                     affiliateLink={post.affiliate_link}
+                    price={post.price}
+                    category={post.category}
+                    tags={post.tags}
+                    stock_status={post.stock_status}
+                    affiliate_platform={post.affiliate_platform}
+                    is_featured={post.is_featured}
+                    video_url={post.video_url}
+                    additional_images={post.additional_images}
+                    slug={post.slug}
                   />
                 </div>
               ))}

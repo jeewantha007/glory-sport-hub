@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play 
 } from "lucide-react";
@@ -26,10 +26,15 @@ interface Post {
   is_featured?: boolean;
   created_at: string;
   updated_at: string;
+  slug?: string;
 }
 
 const PostDetail = () => {
-  const { id } = useParams();
+  const { id, slug } = useParams();
+  const navigate = useNavigate();
+  console.log("Post ID from URL:", id);
+  console.log("Post slug from URL:", slug);
+  
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -37,20 +42,48 @@ const PostDetail = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (id) fetchPost();
-  }, [id]);
+    if (id || slug) fetchPost();
+  }, [id, slug]);
 
   const fetchPost = async () => {
     try {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+      console.log("Fetching post with ID:", id, "or slug:", slug);
+      let query = supabase.from("posts").select("*");
+      
+      // If we have a slug parameter, use it to fetch the post
+      if (slug) {
+        query = query.eq("slug", slug);
+      } 
+      // If we have an ID parameter, use it to fetch the post
+      else if (id) {
+        // Check if the ID looks like a slug (contains letters and hyphens)
+        if (id.includes('-') && /[a-z]/.test(id)) {
+          // Treat it as a slug
+          query = query.eq("slug", id);
+        } else {
+          // Treat it as an ID
+          query = query.eq("id", id);
+        }
+      }
+      
+      const { data, error } = await query.maybeSingle();
+      
+      console.log("Post data:", data);
+      console.log("Post error:", error);
+      
       if (error) throw error;
-      setPost(data);
-      if (data?.title) document.title = data.title;
+      
+      if (data) {
+        setPost(data);
+        if (data.title) document.title = data.title;
+        
+        // If we fetched by ID but the post has a slug, redirect to the slug URL
+        if (id && data.slug && data.slug !== id) {
+          navigate(`/post/${data.slug}`, { replace: true });
+        }
+      }
     } catch (error: any) {
+      console.error("Error fetching post:", error);
       toast({
         title: "Error",
         description: "Failed to load post. Please try again.",
@@ -327,68 +360,44 @@ const PostDetail = () => {
                   href={post.affiliate_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block"
+                  className="block w-full"
                 >
                   <Button 
                     size="lg" 
-                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                    disabled={post.stock_status === 'out_of_stock'}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-lg hover:shadow-xl transition-all font-semibold py-6"
                   >
-                    <span>
-                      {post.stock_status === 'out_of_stock' 
-                        ? 'Currently Unavailable' 
-                        : 'Shop This Product Now'}
-                    </span>
-                    {post.stock_status !== 'out_of_stock' && (
-                      <ExternalLink className="w-5 h-5 ml-2" />
-                    )}
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Shop Now & Save
                   </Button>
                 </a>
-                
-                <p className="text-xs text-center text-gray-500">
-                  Secure checkout • Free shipping available • Money-back guarantee
-                </p>
               </div>
 
-              {/* Email Subscribe Form */}
-              <div className="bg-black rounded-2xl p-6 mb-12">
-                <h2 className="text-xl font-bold mb-3 text-white text-center">
-                  Subscribe for More Sports Updates
-                </h2>
-                <EmailSubscribeForm />
-              </div>
-
-            </div>
-          </div>
-
-          {/* Why Buy Section */}
-          <div className="bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800">
-            <h2 className="text-2xl font-bold mb-6 text-center text-white">Why Choose This Product?</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-green-500/10 rounded-full mb-4">
-                  <CheckCircle className="w-7 h-7 text-green-500" />
+              {/* Features Grid */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-green-500/10 rounded-full mb-4">
+                    <CheckCircle className="w-7 h-7 text-green-500" />
+                  </div>
+                  <h3 className="font-bold mb-2 text-white">Quality Assured</h3>
+                  <p className="text-sm text-gray-400">Every product is carefully vetted and tested</p>
                 </div>
-                <h3 className="font-bold mb-2 text-white">Quality Assured</h3>
-                <p className="text-sm text-gray-400">Every product is carefully vetted and tested</p>
-              </div>
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500/10 rounded-full mb-4">
-                  <Shield className="w-7 h-7 text-blue-500" />
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500/10 rounded-full mb-4">
+                    <Shield className="w-7 h-7 text-blue-500" />
+                  </div>
+                  <h3 className="font-bold mb-2 text-white">Trusted Brands</h3>
+                  <p className="text-sm text-gray-400">We partner only with reputable suppliers</p>
                 </div>
-                <h3 className="font-bold mb-2 text-white">Trusted Brands</h3>
-                <p className="text-sm text-gray-400">We partner only with reputable suppliers</p>
-              </div>
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-500/10 rounded-full mb-4">
-                  <TrendingUp className="w-7 h-7 text-purple-500" />
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-500/10 rounded-full mb-4">
+                    <TrendingUp className="w-7 h-7 text-purple-500" />
+                  </div>
+                  <h3 className="font-bold mb-2 text-white">Best Value</h3>
+                  <p className="text-sm text-gray-400">Competitive pricing with exclusive deals</p>
                 </div>
-                <h3 className="font-bold mb-2 text-white">Best Value</h3>
-                <p className="text-sm text-gray-400">Competitive pricing with exclusive deals</p>
               </div>
             </div>
           </div>
-
         </article>
       </main>
       <Footer />
