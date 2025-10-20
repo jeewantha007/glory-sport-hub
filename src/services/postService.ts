@@ -49,6 +49,18 @@ export const postService = {
       .select()
       .single();
 
+    // ✅ Auto-ping Google for sitemap update
+    if (data && !error) {
+      try {
+        await fetch(
+          "https://www.google.com/ping?sitemap=https://www.gloryofsport.com/sitemap.xml"
+        );
+        console.log("Google notified about sitemap update");
+      } catch (err) {
+        console.error("Failed to ping Google:", err);
+      }
+    }
+
     return { data, error };
   },
 
@@ -68,6 +80,18 @@ export const postService = {
       .eq("id", id)
       .select()
       .single();
+
+    // ✅ Auto-ping Google for sitemap update
+    if (data && !error) {
+      try {
+        await fetch(
+          "https://www.google.com/ping?sitemap=https://www.gloryofsport.com/sitemap.xml"
+        );
+        console.log("Google notified about sitemap update");
+      } catch (err) {
+        console.error("Failed to ping Google:", err);
+      }
+    }
 
     return { data, error };
   },
