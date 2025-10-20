@@ -1,24 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,               // your Supabase URL
-  process.env.SUPABASE_SERVICE_ROLE_KEY       // must be Service Role Key
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default async function handler(req, res) {
   try {
-    // Fetch posts
     const { data: posts = [], error: postsError } = await supabase
       .from('posts')
       .select('slug, updated_at')
       .order('updated_at', { ascending: false });
+
     if (postsError) throw postsError;
 
-    // Fetch news_posts
     const { data: news = [], error: newsError } = await supabase
       .from('news_posts')
       .select('slug, updated_at')
       .order('updated_at', { ascending: false });
+
     if (newsError) throw newsError;
 
     const allPosts = [...posts, ...news];
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
           : new Date().toISOString();
         return `
   <url>
-    <loc>https://www.gloryofsport.com/${item.slug.includes('/') ? item.slug : 'article/' + item.slug}</loc>
+    <loc>https://www.gloryofsport.com/${item.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <priority>0.7</priority>
   </url>`;
