@@ -28,9 +28,13 @@ export default async function handler(req, res) {
         const lastmod = item.updated_at
           ? new Date(item.updated_at).toISOString()
           : new Date().toISOString();
+        
+        // Determine the correct URL path based on which table the item came from
+        const urlPath = posts.includes(item) ? `/post/${item.slug}` : `/news/${item.slug}`;
+        
         return `
   <url>
-    <loc>https://www.gloryofsport.com/${item.slug}</loc>
+    <loc>https://www.gloryofsport.com${urlPath}</loc>
     <lastmod>${lastmod}</lastmod>
     <priority>0.7</priority>
   </url>`;

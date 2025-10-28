@@ -9,6 +9,7 @@ import EmailSubscribeForm from "@/components/EmailSubscribeForm";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useMeta } from "@/hooks/use-meta";
 
 interface Post {
   id: string;
@@ -27,6 +28,8 @@ interface Post {
   created_at: string;
   updated_at: string;
   slug?: string;
+  meta_title?: string;
+  meta_description?: string;
 }
 
 const PostDetail = () => {
@@ -40,6 +43,15 @@ const PostDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
   const { toast } = useToast();
+
+  // Set up meta tags
+  useMeta({
+    title: post?.meta_title || post?.title,
+    description: post?.meta_description || post?.description,
+    image: post?.image_url,
+    url: post?.slug ? `https://www.gloryofsport.com/post/${post.slug}` : undefined,
+    type: 'article'
+  });
 
   useEffect(() => {
     if (id || slug) fetchPost();
@@ -75,7 +87,6 @@ const PostDetail = () => {
       
       if (data) {
         setPost(data);
-        if (data.title) document.title = data.title;
         
         // If we fetched by ID but the post has a slug, redirect to the slug URL
         if (id && data.slug && data.slug !== id) {

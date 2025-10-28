@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { newsService } from "@/services";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, Clock, Play } from "lucide-react";
+import { useMeta } from "@/hooks/use-meta";
 
 interface Section {
   id: string;
@@ -19,6 +20,15 @@ const NewsDetails = () => {
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Set up meta tags
+  useMeta({
+    title: post?.meta_title || post?.title,
+    description: post?.meta_description || post?.description,
+    image: post?.featured_image,
+    url: post?.slug ? `https://www.gloryofsport.com/news/${post.slug}` : undefined,
+    type: 'article'
+  });
 
   useEffect(() => {
     const fetchPost = async () => {
