@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Edit, Eye, Image, FolderOpen, Link2, Tag, DollarSign, Video, ExternalLink, Plus, X, Star, TrendingUp, Upload, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Edit, Eye, Image, FolderOpen, Link2, Tag, DollarSign, Video, ExternalLink, Plus, X, Star, TrendingUp, Upload, Loader2, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +33,9 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingAdditional, setUploadingAdditional] = useState<number | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   
+  const editorRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,8 +54,23 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
       setIsFeatured(editingPost.is_featured || false);
       setMetaTitle(editingPost.meta_title || "");
       setMetaDescription(editingPost.meta_description || "");
+      
+      if (editorRef.current) {
+        editorRef.current.innerHTML = editingPost.description;
+      }
     }
   }, [editingPost]);
+
+  const applyFormat = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+  };
+
+  const handleEditorChange = () => {
+    if (editorRef.current) {
+      setDescription(editorRef.current.innerHTML);
+    }
+  };
 
   const addAdditionalImage = () => {
     setAdditionalImages([...additionalImages, ""]);
@@ -255,9 +272,9 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
   };
 
   return (
-    <div className="bg-card rounded-2xl p-8 shadow-xl mb-8 border border-border/50">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold">
+    <div className="bg-card rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl mb-8 border border-border/50">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">
           {editingPost ? "Edit Post" : "Create New Post"}
         </h2>
         <Button variant="ghost" size="sm" onClick={onCancel}>
@@ -267,7 +284,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold">
               <Edit className="w-4 h-4" />
@@ -302,25 +319,186 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
           </div>
         </div>
 
-        {/* Description */}
+        {/* Rich Text Editor for Description */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-semibold">
-            <Eye className="w-4 h-4" />
-            Description *
-          </label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            rows={5}
-            className="resize-none"
-            placeholder="Describe the product features and benefits..."
-          />
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <Eye className="w-4 h-4" />
+              Description *
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              {showPreview ? "Edit" : "Preview"}
+            </Button>
+          </div>
+
+          {!showPreview ? (
+            <div className="border border-border rounded-lg overflow-hidden bg-background">
+              {/* Toolbar */}
+              <div className="flex flex-wrap gap-1 p-2 border-b border-border bg-muted/50">
+                {/* Text Formatting */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('bold')}
+                  title="Bold"
+                  className="h-8 w-8 p-0"
+                >
+                  <Bold className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('italic')}
+                  title="Italic"
+                  className="h-8 w-8 p-0"
+                >
+                  <Italic className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('underline')}
+                  title="Underline"
+                  className="h-8 w-8 p-0"
+                >
+                  <Underline className="w-4 h-4" />
+                </Button>
+
+                <div className="w-px h-8 bg-border mx-1" />
+
+                {/* Alignment */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('justifyLeft')}
+                  title="Align Left"
+                  className="h-8 w-8 p-0"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('justifyCenter')}
+                  title="Align Center"
+                  className="h-8 w-8 p-0"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('justifyRight')}
+                  title="Align Right"
+                  className="h-8 w-8 p-0"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </Button>
+
+                <div className="w-px h-8 bg-border mx-1" />
+
+                {/* Lists */}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('insertUnorderedList')}
+                  title="Bullet List"
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => applyFormat('insertOrderedList')}
+                  title="Numbered List"
+                  className="h-8 w-8 p-0"
+                >
+                  <ListOrdered className="w-4 h-4" />
+                </Button>
+
+                <div className="w-px h-8 bg-border mx-1" />
+
+                {/* Font Size */}
+                <select
+                  onChange={(e) => applyFormat('fontSize', e.target.value)}
+                  className="h-8 px-2 text-xs border border-border rounded bg-background"
+                  defaultValue="3"
+                >
+                  <option value="1">Small</option>
+                  <option value="3">Normal</option>
+                  <option value="5">Large</option>
+                  <option value="7">XLarge</option>
+                </select>
+
+                {/* Text Color */}
+                <div className="relative">
+                  <input
+                    type="color"
+                    onChange={(e) => applyFormat('foreColor', e.target.value)}
+                    className="h-8 w-12 cursor-pointer border border-border rounded"
+                    title="Text Color"
+                  />
+                </div>
+
+                {/* Heading */}
+                <select
+                  onChange={(e) => {
+                    applyFormat('formatBlock', e.target.value);
+                    e.target.value = 'p';
+                  }}
+                  className="h-8 px-2 text-xs border border-border rounded bg-background"
+                  defaultValue="p"
+                >
+                  <option value="p">Paragraph</option>
+                  <option value="h1">Heading 1</option>
+                  <option value="h2">Heading 2</option>
+                  <option value="h3">Heading 3</option>
+                </select>
+              </div>
+
+              {/* Editor */}
+              <div
+                ref={editorRef}
+                contentEditable
+                onInput={handleEditorChange}
+                className="min-h-[300px] p-4 focus:outline-none prose prose-sm max-w-none"
+                style={{ 
+                  lineHeight: '1.6',
+                  fontSize: '15px'
+                }}
+              />
+            </div>
+          ) : (
+            <div className="border border-border rounded-lg p-4 min-h-[300px] bg-muted/20">
+              <div 
+                className="prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            </div>
+          )}
+          
+          <p className="text-xs text-muted-foreground">
+            Use the toolbar to format your text. Add headings, colors, lists, and more to make your description engaging.
+          </p>
         </div>
 
         {/* Media Section */}
-        <div className="space-y-4 p-4 border border-border/50 rounded-lg bg-muted/20">
-          <h3 className="font-semibold text-lg flex items-center gap-2">
+        <div className="space-y-4 p-3 sm:p-4 border border-border/50 rounded-lg bg-muted/20">
+          <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2">
             <Image className="w-5 h-5" />
             Media
           </h3>
@@ -329,24 +507,19 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
           <div className="space-y-3">
             <label className="text-sm font-semibold">Primary Image *</label>
             
-            {/* URL Input */}
-            <div>
-              <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="h-12"
-                placeholder="Paste image URL here"
-              />
-            </div>
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="h-12"
+              placeholder="Paste image URL here"
+            />
 
-            {/* OR Divider */}
             <div className="flex items-center gap-3">
               <div className="flex-1 border-t border-border"></div>
               <span className="text-xs text-muted-foreground font-medium">OR</span>
               <div className="flex-1 border-t border-border"></div>
             </div>
 
-            {/* Upload Button */}
             <div className="relative">
               <label className="flex items-center justify-center w-full h-14 px-4 border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-all bg-card">
                 <div className="flex items-center gap-2 text-primary">
@@ -375,13 +548,12 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
               </p>
             </div>
 
-            {/* Image Preview */}
             {imageUrl && (
               <div className="mt-3 rounded-lg overflow-hidden border-2 border-border/50 bg-muted/30">
                 <img 
                   src={imageUrl} 
                   alt="Preview" 
-                  className="w-full h-64 object-cover"
+                  className="w-full h-48 sm:h-64 object-cover"
                   onError={(e) => {
                     e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Invalid+Image';
                   }}
@@ -396,7 +568,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
               <label className="text-sm font-semibold">Additional Images</label>
               <Button type="button" size="sm" variant="outline" onClick={addAdditionalImage}>
                 <Plus className="w-4 h-4 mr-1" />
-                Add Image
+                Add
               </Button>
             </div>
             {additionalImages.map((img, index) => (
@@ -444,17 +616,15 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold">
               <Video className="w-4 h-4" />
-              Video (YouTube/Vimeo URL or Upload)
+              Video
             </label>
             
-            <div className="flex gap-2">
-              <Input
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                className="h-12"
-                placeholder="https://youtube.com/watch?v=... or upload below"
-              />
-            </div>
+            <Input
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              className="h-12"
+              placeholder="https://youtube.com/watch?v=..."
+            />
 
             <div className="flex items-center gap-2">
               <div className="flex-1">
@@ -482,7 +652,7 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
         </div>
 
         {/* Product Details */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold">
               <DollarSign className="w-4 h-4" />
@@ -579,8 +749,8 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
         </div>
 
         {/* SEO Section */}
-        <div className="space-y-4 p-4 border border-border/50 rounded-lg bg-muted/20">
-          <h3 className="font-semibold text-lg flex items-center gap-2">
+        <div className="space-y-4 p-3 sm:p-4 border border-border/50 rounded-lg bg-muted/20">
+          <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
             SEO Settings
           </h3>
@@ -612,15 +782,15 @@ const PostForm = ({ editingPost, uniqueCategories, onSuccess, onCancel }: PostFo
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Button 
             type="submit" 
             size="lg"
-            className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+            className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 w-full sm:w-auto"
           >
             {editingPost ? "Update Post" : "Create Post"}
           </Button>
-          <Button type="button" variant="outline" size="lg" onClick={onCancel}>
+          <Button type="button" variant="outline" size="lg" onClick={onCancel} className="w-full sm:w-auto">
             Cancel
           </Button>
         </div>
