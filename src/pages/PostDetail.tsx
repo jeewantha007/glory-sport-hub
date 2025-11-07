@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, ExternalLink, Star, Shield, TrendingUp, CheckCircle, Tag, Calendar, DollarSign, Package, ChevronLeft, ChevronRight, Play 
+import {
+  ArrowLeft,
+  ExternalLink,
+  Star,
+  Shield,
+  TrendingUp,
+  CheckCircle,
+  Tag,
+  Calendar,
+  DollarSign,
+  Package,
+  ChevronLeft,
+  ChevronRight,
+  Play,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -22,7 +34,7 @@ interface Post {
   category: string;
   tags: string[];
   price?: number;
-  stock_status?: 'in_stock' | 'limited' | 'out_of_stock';
+  stock_status?: "in_stock" | "limited" | "out_of_stock";
   affiliate_platform?: string;
   is_featured?: boolean;
   created_at: string;
@@ -37,7 +49,7 @@ const PostDetail = () => {
   const navigate = useNavigate();
   console.log("Post ID from URL:", id);
   console.log("Post slug from URL:", slug);
-  
+
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -47,10 +59,14 @@ const PostDetail = () => {
   // Set up meta tags
   useMeta({
     title: post?.meta_title || post?.title,
-    description: post?.meta_description || post?.description,
+    description:
+      post?.meta_description ||
+      post?.description?.replace(/<[^>]*>/g, "").substring(0, 160),
     image: post?.image_url,
-    url: post?.slug ? `https://www.gloryofsport.com/post/${post.slug}` : undefined,
-    type: 'article'
+    url: post?.slug
+      ? `https://www.gloryofsport.com/post/${post.slug}`
+      : undefined,
+    type: "article",
   });
 
   useEffect(() => {
@@ -61,15 +77,15 @@ const PostDetail = () => {
     try {
       console.log("Fetching post with ID:", id, "or slug:", slug);
       let query = supabase.from("posts").select("*");
-      
+
       // If we have a slug parameter, use it to fetch the post
       if (slug) {
         query = query.eq("slug", slug);
-      } 
+      }
       // If we have an ID parameter, use it to fetch the post
       else if (id) {
         // Check if the ID looks like a slug (contains letters and hyphens)
-        if (id.includes('-') && /[a-z]/.test(id)) {
+        if (id.includes("-") && /[a-z]/.test(id)) {
           // Treat it as a slug
           query = query.eq("slug", id);
         } else {
@@ -77,17 +93,17 @@ const PostDetail = () => {
           query = query.eq("id", id);
         }
       }
-      
+
       const { data, error } = await query.maybeSingle();
-      
+
       console.log("Post data:", data);
       console.log("Post error:", error);
-      
+
       if (error) throw error;
-      
+
       if (data) {
         setPost(data);
-        
+
         // If we fetched by ID but the post has a slug, redirect to the slug URL
         if (id && data.slug && data.slug !== id) {
           navigate(`/post/${data.slug}`, { replace: true });
@@ -108,26 +124,42 @@ const PostDetail = () => {
   const features = [
     { icon: Shield, text: "Verified Quality" },
     { icon: Star, text: "Expert Reviewed" },
-    { icon: TrendingUp, text: "Best Value" }
+    { icon: TrendingUp, text: "Best Value" },
   ];
 
-  const allImages = post ? [post.image_url, ...(post.additional_images || [])].filter(Boolean) : [];
+  const allImages = post
+    ? [post.image_url, ...(post.additional_images || [])].filter(Boolean)
+    : [];
 
-  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  const nextImage = () =>
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  const prevImage = () =>
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + allImages.length) % allImages.length
+    );
 
   const getVideoEmbedUrl = (url: string) => {
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const videoId = url.includes('youtu.be') 
-        ? url.split('youtu.be/')[1]?.split('?')[0]
-        : url.split('v=')[1]?.split('&')[0];
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      const videoId = url.includes("youtu.be")
+        ? url.split("youtu.be/")[1]?.split("?")[0]
+        : url.split("v=")[1]?.split("&")[0];
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    if (url.includes('vimeo.com')) {
-      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+    if (url.includes("vimeo.com")) {
+      const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
       return `https://player.vimeo.com/video/${videoId}`;
     }
     return url;
+  };
+
+  // Function to sanitize and clean HTML
+  const sanitizeHTML = (html: string) => {
+    // Remove data-* attributes and excessive inline styles
+    return html
+      .replace(/data-[a-z-]+="[^"]*"/g, "")
+      .replace(/style="[^"]*"/g, "")
+      .replace(/<br data-[^>]*>/g, "<br>")
+      .trim();
   };
 
   if (isLoading) {
@@ -162,10 +194,17 @@ const PostDetail = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-6">
               <ArrowLeft className="w-10 h-10 text-gray-400" />
             </div>
-            <h2 className="text-3xl font-bold mb-4 text-white">Post Not Found</h2>
-            <p className="text-gray-400 mb-8">The product you're looking for doesn't exist or has been removed.</p>
+            <h2 className="text-3xl font-bold mb-4 text-white">
+              Post Not Found
+            </h2>
+            <p className="text-gray-400 mb-8">
+              The product you're looking for doesn't exist or has been removed.
+            </p>
             <Link to="/">
-              <Button size="lg" className="bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-600 hover:to-gray-700">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-600 hover:to-gray-700"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Home
               </Button>
@@ -183,7 +222,10 @@ const PostDetail = () => {
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="max-w-6xl mx-auto mb-6">
-          <Link to="/" className="inline-flex items-center text-gray-400 hover:text-white transition-colors group">
+          <Link
+            to="/"
+            className="inline-flex items-center text-gray-400 hover:text-white transition-colors group"
+          >
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to all products</span>
           </Link>
@@ -191,7 +233,7 @@ const PostDetail = () => {
 
         <article className="max-w-6xl mx-auto">
           {/* Product Layout */}
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
             {/* Image/Video Section */}
             <div className="space-y-4">
               <div className="relative group overflow-hidden rounded-2xl shadow-2xl bg-gray-800">
@@ -231,7 +273,10 @@ const PostDetail = () => {
                         className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/40 transition-colors"
                       >
                         <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                          <Play className="w-8 h-8 text-black ml-1" fill="currentColor" />
+                          <Play
+                            className="w-8 h-8 text-black ml-1"
+                            fill="currentColor"
+                          />
                         </div>
                       </button>
                     )}
@@ -251,8 +296,8 @@ const PostDetail = () => {
                       }}
                       className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                         currentImageIndex === index && !showVideo
-                          ? 'border-white scale-105'
-                          : 'border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100'
+                          ? "border-white scale-105"
+                          : "border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100"
                       }`}
                     >
                       <img
@@ -267,11 +312,14 @@ const PostDetail = () => {
                       onClick={() => setShowVideo(true)}
                       className={`aspect-square rounded-lg overflow-hidden border-2 transition-all bg-gray-800 flex items-center justify-center ${
                         showVideo
-                          ? 'border-white scale-105'
-                          : 'border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100'
+                          ? "border-white scale-105"
+                          : "border-gray-700 hover:border-gray-500 opacity-70 hover:opacity-100"
                       }`}
                     >
-                      <Play className="w-8 h-8 text-white" fill="currentColor" />
+                      <Play
+                        className="w-8 h-8 text-white"
+                        fill="currentColor"
+                      />
                     </button>
                   )}
                 </div>
@@ -285,7 +333,9 @@ const PostDetail = () => {
                     className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800 shadow-sm"
                   >
                     <feature.icon className="w-5 h-5 mx-auto mb-1 text-white" />
-                    <span className="text-xs font-medium text-gray-300">{feature.text}</span>
+                    <span className="text-xs font-medium text-gray-300">
+                      {feature.text}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -294,7 +344,7 @@ const PostDetail = () => {
             {/* Content Section */}
             <div className="flex flex-col">
               <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight text-white">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight text-white">
                   {post.title}
                 </h1>
 
@@ -308,34 +358,55 @@ const PostDetail = () => {
                   {post.affiliate_platform && (
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">
                       <Package className="w-4 h-4" />
-                      <span className="font-medium">{post.affiliate_platform}</span>
+                      <span className="font-medium">
+                        {post.affiliate_platform}
+                      </span>
                     </div>
                   )}
                   {post.created_at && (
                     <div className="flex items-center gap-1.5 text-gray-400">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(post.created_at).toLocaleDateString('en-US', { 
-                        month: 'long', day: 'numeric', year: 'numeric' 
-                      })}</span>
+                      <span>
+                        {new Date(post.created_at).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-lg mb-6">
+                <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-lg mb-6">
                   <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-white">
                     <CheckCircle className="w-5 h-5 text-green-500" />
                     Product Details
                   </h2>
-                  <p className="text-gray-400 leading-relaxed text-lg whitespace-pre-wrap">
-                    {post.description}
-                  </p>
+
+                  {/* Render rich text HTML content */}
+                  <div
+                    className="prose prose-invert prose-lg max-w-none text-white
+                    prose-headings:text-white
+                    prose-p:text-white
+                    prose-strong:text-white
+                    prose-em:text-white
+                    prose-ul:text-white
+                    prose-ol:text-white
+                    prose-li:text-white
+                    prose-a:text-white prose-a:hover:text-gray-200"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeHTML(post.description),
+                    }}
+                  />
                 </div>
 
                 {post.tags && post.tags.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
                       <Tag className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-semibold text-gray-400">Tags</span>
+                      <span className="text-sm font-semibold text-gray-400">
+                        Tags
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {post.tags.map((tag, index) => (
@@ -352,29 +423,33 @@ const PostDetail = () => {
               </div>
 
               {/* CTA Section */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 space-y-4 mb-6">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-700 space-y-4 mb-6">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-gray-700 rounded-lg">
                     <Star className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold mb-1 text-white">Exclusive Offer</h3>
+                    <h3 className="font-bold mb-1 text-white">
+                      Exclusive Offer
+                    </h3>
                     <p className="text-sm text-gray-400">
-                      {post.price 
-                        ? `Get this premium product for only $${post.price.toFixed(2)}`
-                        : 'Get this premium product with our special affiliate pricing'}
+                      {post.price
+                        ? `Get this premium product for only $${post.price.toFixed(
+                            2
+                          )}`
+                        : "Get this premium product with our special affiliate pricing"}
                     </p>
                   </div>
                 </div>
-                
+
                 <a
                   href={post.affiliate_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full"
                 >
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-lg hover:shadow-xl transition-all font-semibold py-6"
                   >
                     <ExternalLink className="w-5 h-5 mr-2" />
@@ -384,27 +459,33 @@ const PostDetail = () => {
               </div>
 
               {/* Features Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-green-500/10 rounded-full mb-4">
                     <CheckCircle className="w-7 h-7 text-green-500" />
                   </div>
                   <h3 className="font-bold mb-2 text-white">Quality Assured</h3>
-                  <p className="text-sm text-gray-400">Every product is carefully vetted and tested</p>
+                  <p className="text-sm text-gray-400">
+                    Every product is carefully vetted and tested
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500/10 rounded-full mb-4">
                     <Shield className="w-7 h-7 text-blue-500" />
                   </div>
                   <h3 className="font-bold mb-2 text-white">Trusted Brands</h3>
-                  <p className="text-sm text-gray-400">We partner only with reputable suppliers</p>
+                  <p className="text-sm text-gray-400">
+                    We partner only with reputable suppliers
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-500/10 rounded-full mb-4">
                     <TrendingUp className="w-7 h-7 text-purple-500" />
                   </div>
                   <h3 className="font-bold mb-2 text-white">Best Value</h3>
-                  <p className="text-sm text-gray-400">Competitive pricing with exclusive deals</p>
+                  <p className="text-sm text-gray-400">
+                    Competitive pricing with exclusive deals
+                  </p>
                 </div>
               </div>
             </div>
