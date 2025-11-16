@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, MessageSquare, Send, MapPin, Clock, CheckCircle } from "lucide-react";
+import { Mail, MessageSquare, Send, MapPin, Clock, CheckCircle, Sparkles, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -68,41 +68,66 @@ const Contact = () => {
       title: "Email Us",
       value: "gloryofsports.contact@gmail.com",
       description: "Send us an email anytime",
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10"
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/10",
+      gradient: "from-blue-500/20 to-cyan-500/20"
     },
     {
       icon: Clock,
       title: "Response Time",
       value: "Within 24 hours",
       description: "We typically respond quickly",
-      color: "text-green-500",
-      bgColor: "bg-green-500/10"
+      color: "text-green-400",
+      bgColor: "bg-green-500/10",
+      gradient: "from-green-500/20 to-emerald-500/20"
     },
     {
       icon: MapPin,
       title: "Location",
       value: "Global Service",
       description: "Serving sports fans worldwide",
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10"
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
+      gradient: "from-purple-500/20 to-pink-500/20"
     }
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-black via-gray-900 to-black relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 pointer-events-none opacity-30">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-green-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       <Navbar />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-gray-800 to-black py-12 sm:py-16 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-gradient-x" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
+        
+        {/* Floating Elements */}
+        <div className="absolute top-10 left-10 animate-float opacity-20">
+          <MessageSquare className="w-12 h-12 text-blue-400" />
+        </div>
+        <div className="absolute bottom-10 right-10 animate-float opacity-20" style={{ animationDelay: '1s' }}>
+          <Sparkles className="w-16 h-16 text-purple-400" />
+        </div>
+        <div className="absolute top-1/2 right-1/4 animate-float opacity-20" style={{ animationDelay: '2s' }}>
+          <Zap className="w-10 h-10 text-green-400" />
+        </div>
+        
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-white/90 text-xs sm:text-sm font-medium mb-4 sm:mb-6 animate-in fade-in slide-in-from-top duration-700 border border-gray-700">
-            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span>We're Here to Help</span>
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2 sm:py-3 text-white font-medium mb-4 sm:mb-6 animate-in fade-in slide-in-from-top duration-700 border border-blue-500/30 shadow-lg shadow-blue-500/20">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+            <span className="text-xs sm:text-sm">We're Here to Help</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom duration-700 delay-100">
-            Get In Touch
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+            <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+              Get In Touch
+            </span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto px-4 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
             Have questions, feedback, or partnership inquiries? We'd love to hear from you!
@@ -110,22 +135,25 @@ const Contact = () => {
         </div>
       </section>
 
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 relative z-10">
         {/* Contact Info Cards */}
         <div className="max-w-5xl mx-auto mb-8 sm:mb-12 md:mb-16">
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {contactInfo.map((info, index) => (
               <div
                 key={index}
-                className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 hover:shadow-xl transition-all hover:-translate-y-1 animate-in fade-in slide-in-from-bottom duration-500"
+                className="group relative animate-in fade-in slide-in-from-bottom duration-500"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className={`inline-flex p-3 ${info.bgColor} rounded-xl mb-4`}>
-                  <info.icon className={`w-6 h-6 ${info.color}`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${info.gradient} rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100`} />
+                <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 shadow-xl border border-gray-700/50 hover:border-gray-600 transition-all hover:scale-105 hover:-translate-y-1">
+                  <div className={`inline-flex p-3 ${info.bgColor} rounded-xl mb-4 border border-gray-700/30`}>
+                    <info.icon className={`w-6 h-6 ${info.color}`} />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2 text-white">{info.title}</h3>
+                  <p className="text-white font-semibold mb-1">{info.value}</p>
+                  <p className="text-sm text-gray-400">{info.description}</p>
                 </div>
-                <h3 className="font-bold text-lg mb-2 text-white">{info.title}</h3>
-                <p className="text-white font-semibold mb-1">{info.value}</p>
-                <p className="text-sm text-gray-400">{info.description}</p>
               </div>
             ))}
           </div>
@@ -136,116 +164,134 @@ const Contact = () => {
           <div className="grid lg:grid-cols-5 gap-6 sm:gap-8">
             {/* Form */}
             <div className="lg:col-span-3">
-              <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-800">
-                <div className="mb-6 sm:mb-8">
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Send us a Message</h2>
-                  <p className="text-sm sm:text-base text-gray-400">
-                    Fill out the form below and we'll get back to you as soon as possible
-                  </p>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-50" />
+                <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-gray-700/50 hover:border-gray-600/50 transition-all">
+                  <div className="mb-6 sm:mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                      <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                        Send us a Message
+                      </span>
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-400">
+                      Fill out the form below and we'll get back to you as soon as possible
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-semibold mb-2 text-white">
+                        Your Name
+                      </label>
+                      <Input
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        placeholder="John Doe"
+                        className="h-12 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500/50 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-semibold mb-2 text-white">
+                        Email Address
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="john@example.com"
+                        className="h-12 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500/50 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="message" className="block text-sm font-semibold mb-2 text-white">
+                        Your Message
+                      </label>
+                      <Textarea
+                        id="message"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                        placeholder="Tell us what's on your mind..."
+                        rows={6}
+                        className="resize-none bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500/50 transition-all"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-base font-semibold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all hover:scale-105"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <span className="animate-pulse">Sending...</span>
+                      ) : (
+                        <>
+                          Send Message
+                          <Send className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
                 </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-semibold mb-2 text-white">
-                      Your Name
-                    </label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      placeholder="John Doe"
-                      className="h-12 bg-gray-800 border-gray-700 text-white placeholder-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-semibold mb-2 text-white">
-                      Email Address
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="john@example.com"
-                      className="h-12 bg-gray-800 border-gray-700 text-white placeholder-gray-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-semibold mb-2 text-white">
-                      Your Message
-                    </label>
-                    <Textarea
-                      id="message"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      required
-                      placeholder="Tell us what's on your mind..."
-                      rows={6}
-                      className="resize-none bg-gray-800 border-gray-700 text-white placeholder-gray-500"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white text-base font-semibold"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <span className="animate-pulse">Sending...</span>
-                    ) : (
-                      <>
-                        Send Message
-                        <Send className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </form>
               </div>
             </div>
 
             {/* Sidebar Info */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Why Contact Us */}
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-800">
-                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">Why Contact Us?</h3>
-                <div className="space-y-3">
-                  {[
-                    "Product recommendations",
-                    "Partnership opportunities",
-                    "Technical support",
-                    "General inquiries",
-                    "Feedback and suggestions"
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-300">{item}</span>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-50" />
+                <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700/50 hover:border-gray-600/50 transition-all">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="p-2 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
                     </div>
-                  ))}
+                    <h3 className="text-lg sm:text-xl font-bold text-white">Why Contact Us?</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      "Product recommendations",
+                      "Partnership opportunities",
+                      "Technical support",
+                      "General inquiries",
+                      "Feedback and suggestions"
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-800/50 transition-colors">
+                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-300">{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {/* Direct Email */}
-              <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-800">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg">
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-50" />
+                <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700/50 hover:border-gray-600/50 transition-all">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg border border-blue-500/30 shadow-lg shadow-blue-500/20">
+                      <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-white">Direct Email</h3>
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">Direct Email</h3>
+                  <p className="text-xs sm:text-sm text-gray-400 mb-3">
+                    Prefer email? Reach us directly at:
+                  </p>
+                  <a 
+                    href="mailto:gloryofsports.contact@gmail.com"
+                    className="text-sm sm:text-base text-blue-400 font-semibold hover:text-blue-300 hover:underline break-all transition-colors"
+                  >
+                    gloryofsports.contact@gmail.com
+                  </a>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-400 mb-3">
-                  Prefer email? Reach us directly at:
-                </p>
-                <a 
-                  href="mailto:gloryofsports.contact@gmail.com"
-                  className="text-sm sm:text-base text-white font-semibold hover:underline break-all"
-                >
-                  gloryofsports.contact@gmail.com
-                </a>
               </div>
             </div>
           </div>
@@ -253,6 +299,24 @@ const Contact = () => {
       </main>
 
       <Footer />
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-gradient-x {
+          background-size: 200% 200%;
+          animation: gradient-x 15s ease infinite;
+        }
+      }`}</style>
     </div>
   );
 };
