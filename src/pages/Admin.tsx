@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, LogOut } from "lucide-react";
+import { Plus, LogOut, Package, Newspaper, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
@@ -28,6 +30,10 @@ const Admin = () => {
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
   const [selectedNewsPosts, setSelectedNewsPosts] = useState<Set<string>>(new Set());
   const [addingType, setAddingType] = useState<"product" | "news">("product");
+  const [activeTab, setActiveTab] = useState("products");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [newsCurrentPage, setNewsCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -35,6 +41,13 @@ const Admin = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     authService.getSession().then(({ data: { session } }) => {
@@ -87,6 +100,7 @@ const Admin = () => {
     }
 
     setFilteredPosts(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [posts, searchTerm, filterCategory, sortBy]);
 
   const fetchPosts = async () => {
@@ -142,6 +156,7 @@ const Admin = () => {
     setEditingPost(post);
     setAddingType("product");
     setIsAdding(true);
+    setActiveTab("products");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -149,6 +164,7 @@ const Admin = () => {
     setEditingNewsPost(post);
     setAddingType("news");
     setIsAdding(true);
+    setActiveTab("news");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -230,6 +246,20 @@ const Admin = () => {
 
   const uniqueCategories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean)));
 
+  // Pagination calculations for products
+  const totalProductPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredPosts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Pagination calculations for news
+  const totalNewsPages = Math.ceil(filteredNewsPosts.length / ITEMS_PER_PAGE);
+  const paginatedNews = filteredNewsPosts.slice(
+    (newsCurrentPage - 1) * ITEMS_PER_PAGE,
+    newsCurrentPage * ITEMS_PER_PAGE
+  );
+
   if (!session) return null;
 
   return (
@@ -244,107 +274,246 @@ const Admin = () => {
               <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
               <p className="text-white/90">Manage your affiliate content and track performance</p>
             </div>
-            <Button
-              variant="secondary"
-              onClick={handleLogout}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Theme Toggle Button */}
+              {mounted && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+                  size="icon"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                onClick={handleLogout}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <StatsCards posts={posts} />
 
-        {/* Add Post Toggle */}
-        {!isAdding ? (
-          <div className="mb-8 flex gap-4">
-            <Button
-              onClick={() => {
-                setIsAdding(true);
-                setAddingType("product");
-              }}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Product Post
-            </Button>
-            <Button
-              onClick={() => {
-                setIsAdding(true);
-                setAddingType("news");
-              }}
-              size="lg"
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:opacity-90 shadow-lg"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add News Post
-            </Button>
-          </div>
-        ) : addingType === "product" ? (
-          <PostForm
-            editingPost={editingPost}
-            uniqueCategories={uniqueCategories}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setIsAdding(false);
-              setEditingPost(null);
-            }}
-          />
-        ) : (
-          <NewsPostForm
-            editingPost={editingNewsPost}
-            onSuccess={handleFormSuccess}
-            onCancel={() => {
-              setIsAdding(false);
-              setEditingNewsPost(null);
-            }}
-          />
-        )}
+        {/* Tabs for Products and News */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Products ({posts.length})
+            </TabsTrigger>
+            <TabsTrigger value="news" className="flex items-center gap-2">
+              <Newspaper className="w-4 h-4" />
+              News ({newsPosts.length})
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filter & Lists */}
-        <PostsFilter
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          uniqueCategories={uniqueCategories}
-        />
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-6">
+            {/* Add Product Post Button */}
+            {!isAdding || addingType !== "product" ? (
+              <div className="mb-8">
+                <Button
+                  onClick={() => {
+                    setIsAdding(true);
+                    setAddingType("product");
+                    setEditingPost(null);
+                  }}
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Product Post
+                </Button>
+              </div>
+            ) : (
+              <PostForm
+                editingPost={editingPost}
+                uniqueCategories={uniqueCategories}
+                onSuccess={handleFormSuccess}
+                onCancel={() => {
+                  setIsAdding(false);
+                  setEditingPost(null);
+                }}
+              />
+            )}
 
-        {/* Product Posts List */}
-        <PostsList
-          posts={filteredPosts}
-          allPosts={posts}
-          selectedPosts={selectedPosts}
-          onToggleSelection={togglePostSelection}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onBulkDelete={handleBulkDelete}
-          searchTerm={searchTerm}
-          filterCategory={filterCategory}
-          onAddPost={() => setIsAdding(true)}
-        />
+            {/* Filter & Products List */}
+            {!isAdding || addingType !== "product" ? (
+              <>
+                <PostsFilter
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  filterCategory={filterCategory}
+                  setFilterCategory={setFilterCategory}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  uniqueCategories={uniqueCategories}
+                />
 
-        {/* News Posts List */}
-        <NewsPostsList
-          posts={filteredNewsPosts}
-          allPosts={newsPosts}
-          selectedPosts={selectedNewsPosts}
-          onToggleSelection={toggleNewsPostSelection}
-          onEdit={handleEditNewsPost}
-          onDelete={handleDeleteNewsPost}
-          onBulkDelete={handleBulkDeleteNewsPosts}
-          searchTerm={searchTerm}
-          onAddPost={() => {
-            setIsAdding(true);
-            setAddingType("news");
-          }}
-        />
+                <PostsList
+                  posts={paginatedProducts}
+                  allPosts={posts}
+                  selectedPosts={selectedPosts}
+                  onToggleSelection={togglePostSelection}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onBulkDelete={handleBulkDelete}
+                  searchTerm={searchTerm}
+                  filterCategory={filterCategory}
+                  onAddPost={() => {
+                    setIsAdding(true);
+                    setAddingType("product");
+                  }}
+                />
+
+                {/* Pagination Controls for Products */}
+                {totalProductPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <Button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalProductPages }, (_, i) => i + 1).map(page => (
+                        <Button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          className={currentPage === page ? "bg-primary" : ""}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      onClick={() => setCurrentPage(prev => Math.min(totalProductPages, prev + 1))}
+                      disabled={currentPage === totalProductPages}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Show results info */}
+                {filteredPosts.length > 0 && (
+                  <div className="text-center text-sm text-muted-foreground mt-4">
+                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredPosts.length)} of {filteredPosts.length} products
+                  </div>
+                )}
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* News Tab */}
+          <TabsContent value="news" className="space-y-6">
+            {/* Add News Post Button */}
+            {!isAdding || addingType !== "news" ? (
+              <div className="mb-8">
+                <Button
+                  onClick={() => {
+                    setIsAdding(true);
+                    setAddingType("news");
+                    setEditingNewsPost(null);
+                  }}
+                  size="lg"
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:opacity-90 shadow-lg"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add News Post
+                </Button>
+              </div>
+            ) : (
+              <NewsPostForm
+                editingPost={editingNewsPost}
+                onSuccess={handleFormSuccess}
+                onCancel={() => {
+                  setIsAdding(false);
+                  setEditingNewsPost(null);
+                }}
+              />
+            )}
+
+            {/* News Posts List */}
+            {!isAdding || addingType !== "news" ? (
+              <>
+                <NewsPostsList
+                  posts={paginatedNews}
+                  allPosts={newsPosts}
+                  selectedPosts={selectedNewsPosts}
+                  onToggleSelection={toggleNewsPostSelection}
+                  onEdit={handleEditNewsPost}
+                  onDelete={handleDeleteNewsPost}
+                  onBulkDelete={handleBulkDeleteNewsPosts}
+                  searchTerm={searchTerm}
+                  onAddPost={() => {
+                    setIsAdding(true);
+                    setAddingType("news");
+                  }}
+                />
+
+                {/* Pagination Controls for News */}
+                {totalNewsPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <Button
+                      onClick={() => setNewsCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={newsCurrentPage === 1}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalNewsPages }, (_, i) => i + 1).map(page => (
+                        <Button
+                          key={page}
+                          onClick={() => setNewsCurrentPage(page)}
+                          variant={newsCurrentPage === page ? "default" : "outline"}
+                          size="sm"
+                          className={newsCurrentPage === page ? "bg-primary" : ""}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      onClick={() => setNewsCurrentPage(prev => Math.min(totalNewsPages, prev + 1))}
+                      disabled={newsCurrentPage === totalNewsPages}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+
+                {/* Show results info */}
+                {filteredNewsPosts.length > 0 && (
+                  <div className="text-center text-sm text-muted-foreground mt-4">
+                    Showing {((newsCurrentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(newsCurrentPage * ITEMS_PER_PAGE, filteredNewsPosts.length)} of {filteredNewsPosts.length} news posts
+                  </div>
+                )}
+              </>
+            ) : null}
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Footer />
