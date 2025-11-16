@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { newsService } from "@/services";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, Clock, Play } from "lucide-react";
 import { useMeta } from "@/hooks/use-meta";
@@ -161,27 +163,28 @@ const NewsDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#05070b]">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
+      <Navbar />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <Button
           asChild
           variant="ghost"
-          className="mb-8 text-gray-400 hover:text-white hover:bg-gray-900"
+          className="mb-4 sm:mb-6 md:mb-8 text-gray-400 hover:text-white hover:bg-gray-900 text-sm sm:text-base"
         >
-          <Link to="/" className="flex items-center gap-2">
-            <ChevronLeft className="h-4 w-4" />
+          <Link to="/news" className="flex items-center gap-2">
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             Back to News
           </Link>
         </Button>
 
         <article className="max-w-4xl mx-auto">
           {/* Hero Section */}
-          <header className="mb-12">
-            <h1 className="text-5xl font-bold mb-6 text-white leading-tight">
+          <header className="mb-8 sm:mb-10 md:mb-12">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-white leading-tight">
               {post.title}
             </h1>
 
-            <div className="flex items-center gap-6 text-gray-400 mb-8">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8">
               {post.created_at && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -200,7 +203,7 @@ const NewsDetails = () => {
 
             {/* Featured Video */}
             {post.video && (
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 {post.videoType === "upload" || !post.video.includes("http") ? (
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
                     <video
@@ -246,17 +249,17 @@ const NewsDetails = () => {
 
             {/* Featured Image */}
             {!post.video && post.featured_image && (
-              <div className="relative rounded-2xl overflow-hidden mb-8 shadow-2xl bg-black/10 flex justify-center items-center">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-2xl bg-black/10 flex justify-center items-center">
                 <img
                   src={post.featured_image}
                   alt={post.title}
-                  className="w-full max-h-[600px] object-contain"
+                  className="w-full max-h-[400px] sm:max-h-[500px] md:max-h-[600px] object-contain"
                 />
               </div>
             )}
 
             {post.meta_description && (
-              <p className="text-xl text-gray-300 leading-relaxed italic border-l-4 border-blue-500 pl-6 py-2">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed italic border-l-4 border-blue-500 pl-4 sm:pl-6 py-2">
                 {post.meta_description}
               </p>
             )}
@@ -264,21 +267,21 @@ const NewsDetails = () => {
 
           {/* Content Sections */}
           {sections && sections.length > 0 ? (
-            <div className="space-y-16">
+            <div className="space-y-10 sm:space-y-12 md:space-y-16">
               {sections.map((section, index) => (
                 <section
                   key={section.id}
-                  className="border-b border-gray-800 pb-12 last:border-b-0"
+                  className="border-b border-gray-800 pb-8 sm:pb-10 md:pb-12 last:border-b-0"
                 >
                   {section.subtitle && (
-                    <h2 className="text-3xl font-bold mb-6 text-white">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white">
                       {section.subtitle}
                     </h2>
                   )}
 
                   {section.description && (
-                    <div className="prose prose-lg prose-invert max-w-none mb-8">
-                      <p className="text-gray-300 leading-relaxed whitespace-pre-line text-lg">
+                    <div className="prose prose-sm sm:prose-base md:prose-lg prose-invert max-w-none mb-6 sm:mb-8">
+                      <p className="text-gray-300 leading-relaxed whitespace-pre-line text-base sm:text-lg">
                         {section.description}
                       </p>
                     </div>
@@ -368,16 +371,17 @@ const NewsDetails = () => {
           )}
 
           {/* Back Button */}
-          <div className="mt-16 pt-8 border-t border-gray-800 flex justify-center">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg" asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <ChevronLeft className="h-5 w-5" />
+          <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 border-t border-gray-800 flex justify-center">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-sm sm:text-base md:text-lg" asChild>
+              <Link to="/news" className="flex items-center gap-2">
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                 Back to All News
               </Link>
             </Button>
           </div>
         </article>
       </div>
+      <Footer />
     </div>
   );
 };

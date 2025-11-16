@@ -94,26 +94,26 @@ const Contact = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-gray-800 to-black py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-gray-800 to-black py-12 sm:py-16 md:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/90 text-sm font-medium mb-6 animate-in fade-in slide-in-from-top duration-700 border border-gray-700">
-            <MessageSquare className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-white/90 text-xs sm:text-sm font-medium mb-4 sm:mb-6 animate-in fade-in slide-in-from-top duration-700 border border-gray-700">
+            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
             <span>We're Here to Help</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-in fade-in slide-in-from-bottom duration-700 delay-100">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom duration-700 delay-100">
             Get In Touch
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto px-4 animate-in fade-in slide-in-from-bottom duration-700 delay-200">
             Have questions, feedback, or partnership inquiries? We'd love to hear from you!
           </p>
         </div>
       </section>
 
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
         {/* Contact Info Cards */}
-        <div className="max-w-5xl mx-auto mb-16">
-          <div className="grid md:grid-cols-3 gap-6">
+        <div className="max-w-5xl mx-auto mb-8 sm:mb-12 md:mb-16">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {contactInfo.map((info, index) => (
               <div
                 key={index}
@@ -133,13 +133,13 @@ const Contact = () => {
 
         {/* Contact Form Section */}
         <div className="max-w-4xl mx-auto">
-          <div className="grid lg:grid-cols-5 gap-8">
+          <div className="grid lg:grid-cols-5 gap-6 sm:gap-8">
             {/* Form */}
             <div className="lg:col-span-3">
-              <div className="bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800">
-                <div className="mb-8">
-                  <h2 className="text-3xl font-bold mb-2 text-white">Send us a Message</h2>
-                  <p className="text-gray-400">
+              <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-800">
+                <div className="mb-6 sm:mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Send us a Message</h2>
+                  <p className="text-sm sm:text-base text-gray-400">
                     Fill out the form below and we'll get back to you as soon as possible
                   </p>
                 </div>
@@ -209,10 +209,10 @@ const Contact = () => {
             </div>
 
             {/* Sidebar Info */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Why Contact Us */}
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 shadow-lg border border-gray-800">
-                <h3 className="text-xl font-bold mb-4 text-white">Why Contact Us?</h3>
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-800">
+                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">Why Contact Us?</h3>
                 <div className="space-y-3">
                   {[
                     "Product recommendations",
@@ -230,19 +230,19 @@ const Contact = () => {
               </div>
 
               {/* Direct Email */}
-              <div className="bg-gray-900 rounded-2xl p-6 shadow-lg border border-gray-800">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-800">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3">
                   <div className="p-2 bg-blue-500/10 rounded-lg">
-                    <Mail className="w-5 h-5 text-blue-500" />
+                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                   </div>
-                  <h3 className="font-bold text-white">Direct Email</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-white">Direct Email</h3>
                 </div>
-                <p className="text-sm text-gray-400 mb-3">
+                <p className="text-xs sm:text-sm text-gray-400 mb-3">
                   Prefer email? Reach us directly at:
                 </p>
                 <a 
                   href="mailto:gloryofsports.contact@gmail.com"
-                  className="text-white font-semibold hover:underline break-all"
+                  className="text-sm sm:text-base text-white font-semibold hover:underline break-all"
                 >
                   gloryofsports.contact@gmail.com
                 </a>

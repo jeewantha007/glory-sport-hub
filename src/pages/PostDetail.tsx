@@ -219,21 +219,21 @@ const PostDetail = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Breadcrumb */}
-        <div className="max-w-6xl mx-auto mb-6">
+        <div className="max-w-6xl mx-auto mb-4 sm:mb-6">
           <Link
             to="/"
-            className="inline-flex items-center text-gray-400 hover:text-white transition-colors group"
+            className="inline-flex items-center text-sm sm:text-base text-gray-400 hover:text-white transition-colors group"
           >
-            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to all products</span>
           </Link>
         </div>
 
         <article className="max-w-6xl mx-auto">
           {/* Product Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
             {/* Image/Video Section */}
             <div className="space-y-4">
               <div className="relative group overflow-hidden rounded-2xl shadow-2xl bg-gray-800">
@@ -286,7 +286,7 @@ const PostDetail = () => {
 
               {/* Thumbnail Gallery */}
               {allImages.length > 1 && (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {allImages.map((img, index) => (
                     <button
                       key={index}
@@ -344,11 +344,11 @@ const PostDetail = () => {
             {/* Content Section */}
             <div className="flex flex-col">
               <div className="flex-1">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight text-white">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight text-white">
                   {post.title}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-4 mb-6 text-sm">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 sm:mb-6 text-xs sm:text-sm">
                   {post.price && (
                     <div className="flex items-center gap-1.5 text-green-400 font-bold text-2xl">
                       <DollarSign className="w-6 h-6" />
@@ -377,9 +377,9 @@ const PostDetail = () => {
                   )}
                 </div>
 
-                <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-lg mb-6">
-                  <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-white">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                <div className="bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-800 shadow-lg mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-bold mb-3 flex items-center gap-2 text-white">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                     Product Details
                   </h2>
 
@@ -401,18 +401,18 @@ const PostDetail = () => {
                 </div>
 
                 {post.tags && post.tags.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Tag className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-semibold text-gray-400">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                      <span className="text-xs sm:text-sm font-semibold text-gray-400">
                         Tags
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {post.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                          className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-800 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
                         >
                           #{tag}
                         </span>
@@ -423,16 +423,16 @@ const PostDetail = () => {
               </div>
 
               {/* CTA Section */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-700 space-y-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gray-700 rounded-lg">
-                    <Star className="w-5 h-5 text-white" />
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-700 space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-gray-700 rounded-lg">
+                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold mb-1 text-white">
+                    <h3 className="text-sm sm:text-base font-bold mb-1 text-white">
                       Exclusive Offer
                     </h3>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-400">
                       {post.price
                         ? `Get this premium product for only $${post.price.toFixed(
                             2
@@ -459,31 +459,31 @@ const PostDetail = () => {
               </div>
 
               {/* Features Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-green-500/10 rounded-full mb-4">
-                    <CheckCircle className="w-7 h-7 text-green-500" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-green-500/10 rounded-full mb-3 sm:mb-4">
+                    <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-green-500" />
                   </div>
-                  <h3 className="font-bold mb-2 text-white">Quality Assured</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="text-sm sm:text-base font-bold mb-1 sm:mb-2 text-white">Quality Assured</h3>
+                  <p className="text-xs sm:text-sm text-gray-400">
                     Every product is carefully vetted and tested
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-500/10 rounded-full mb-4">
-                    <Shield className="w-7 h-7 text-blue-500" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-blue-500/10 rounded-full mb-3 sm:mb-4">
+                    <Shield className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
                   </div>
-                  <h3 className="font-bold mb-2 text-white">Trusted Brands</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="text-sm sm:text-base font-bold mb-1 sm:mb-2 text-white">Trusted Brands</h3>
+                  <p className="text-xs sm:text-sm text-gray-400">
                     We partner only with reputable suppliers
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-purple-500/10 rounded-full mb-4">
-                    <TrendingUp className="w-7 h-7 text-purple-500" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-purple-500/10 rounded-full mb-3 sm:mb-4">
+                    <TrendingUp className="w-5 h-5 sm:w-7 sm:h-7 text-purple-500" />
                   </div>
-                  <h3 className="font-bold mb-2 text-white">Best Value</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="text-sm sm:text-base font-bold mb-1 sm:mb-2 text-white">Best Value</h3>
+                  <p className="text-xs sm:text-sm text-gray-400">
                     Competitive pricing with exclusive deals
                   </p>
                 </div>

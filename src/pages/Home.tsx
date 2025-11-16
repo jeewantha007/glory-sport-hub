@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, TrendingUp, Star, Zap, Award } from "lucide-react";
+import { Search, TrendingUp, Star, Zap, Award, Filter, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
@@ -38,17 +38,27 @@ interface NewsPost {
   created_at?: string;
 }
 
+const POSTS_PER_PAGE = 12; // Number of products to load per page
+
 const Home = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [displayedCount, setDisplayedCount] = useState(POSTS_PER_PAGE); // Show 12 products initially
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPosts();
     fetchNewsPosts();
   }, []);
+
+  // Reset displayed count when search query or category changes
+  useEffect(() => {
+    setDisplayedCount(POSTS_PER_PAGE);
+  }, [searchQuery, selectedCategory]);
 
   const fetchPosts = async () => {
     try {
@@ -85,12 +95,38 @@ const Home = () => {
     }
   };
 
-  const filteredPosts = posts.filter(
-    (post) =>
+  // Get unique categories from posts
+  const categories = ["all", ...Array.from(new Set(posts.map(p => p.category).filter(Boolean)))];
+
+  const filteredPosts = posts.filter((post) => {
+    const matchesSearch = 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      post.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setShowMobileFilters(false);
+    setDisplayedCount(POSTS_PER_PAGE); // Reset to initial count when category changes
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory("all");
+    setSearchQuery("");
+    setDisplayedCount(POSTS_PER_PAGE); // Reset to initial count when filters cleared
+  };
+
+  const handleLoadMore = () => {
+    setDisplayedCount(prev => prev + POSTS_PER_PAGE);
+  };
+
+  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (searchQuery ? 1 : 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-black to-gray-900">
@@ -153,9 +189,20 @@ const Home = () => {
               className="pl-12 h-14 text-base rounded-xl border-2 focus:border-gray-700 transition-all bg-gray-800 text-white placeholder-gray-500"
             />
           </div>
-          {searchQuery && (
-            <div className="mt-3 text-sm text-gray-400">
-              Found {filteredPosts.length} {filteredPosts.length === 1 ? 'result' : 'results'}
+          {(searchQuery || selectedCategory !== "all") && (
+            <div className="mt-3 flex items-center justify-between text-sm">
+              <span className="text-gray-400">
+                Found {filteredPosts.length} {filteredPosts.length === 1 ? 'result' : 'results'}
+              </span>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" />
+                  Clear filters
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -166,7 +213,7 @@ const Home = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {[
             { label: "Products", value: posts.length + "+" },
-            { label: "Categories", value: new Set(posts.map(p => p.category)).size + "+" },
+            { label: "Categories", value: categories.length - 1 + "+" },
             { label: "Trusted Reviews", value: "100+" },
             { label: "Happy Customers", value: "1K+" }
           ].map((stat, i) => (
@@ -184,24 +231,89 @@ const Home = () => {
           
           {/* Products Section - 3/4 width */}
           <div className="xl:col-span-3">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-2 text-white">
-                  {searchQuery ? "Search Results" : "Featured Sports Gear"}
+                  {searchQuery || selectedCategory !== "all" ? "Filtered Results" : "Featured Sports Gear"}
                 </h2>
                 <p className="text-gray-400">
                   {searchQuery 
                     ? `Showing results for "${searchQuery}"`
+                    : selectedCategory !== "all"
+                    ? `Category: ${selectedCategory}`
                     : "Hand-picked equipment and gear to elevate your game"
                   }
                 </p>
               </div>
-              {!searchQuery && (
-                <Button asChild variant="outline" className="hidden md:flex">
-                  <Link to="/products">View All</Link>
+              <div className="flex items-center gap-2">
+                {/* Mobile Filter Toggle */}
+                <Button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  variant="outline"
+                  className="md:hidden relative"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filters
+                  {activeFiltersCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
                 </Button>
-              )}
+                {!searchQuery && selectedCategory === "all" && (
+                  <Button asChild variant="outline" className="hidden md:flex">
+                    <Link to="/products">View All</Link>
+                  </Button>
+                )}
+              </div>
             </div>
+
+            {/* Category Filter - Desktop */}
+            <div className="hidden md:flex flex-wrap gap-2 mb-6">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => handleCategorySelect(category)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    selectedCategory === category
+                      ? "bg-white text-black shadow-lg"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
+                  }`}
+                >
+                  {category === "all" ? "All Categories" : category}
+                </button>
+              ))}
+            </div>
+
+            {/* Category Filter - Mobile Dropdown */}
+            {showMobileFilters && (
+              <div className="md:hidden mb-6 bg-gray-900 rounded-xl p-4 border border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-white">Filter by Category</h3>
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => handleCategorySelect(category)}
+                      className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-all ${
+                        selectedCategory === category
+                          ? "bg-white text-black"
+                          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                      }`}
+                    >
+                      {category === "all" ? "All Categories" : category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -220,55 +332,72 @@ const Home = () => {
                   <Search className="w-8 h-8 text-gray-600" />
                 </div>
                 <h3 className="text-2xl font-semibold mb-2 text-white">
-                  {searchQuery ? "No results found" : "No products yet"}
+                  {searchQuery || selectedCategory !== "all" ? "No results found" : "No products yet"}
                 </h3>
-                <p className="text-gray-400 text-lg max-w-md mx-auto">
-                  {searchQuery 
-                    ? "Try adjusting your search terms or browse all categories"
+                <p className="text-gray-400 text-lg max-w-md mx-auto mb-4">
+                  {searchQuery || selectedCategory !== "all"
+                    ? "Try adjusting your filters or browse all categories"
                     : "Check back soon for exciting new products"
                   }
                 </p>
-                {searchQuery && (
+                {activeFiltersCount > 0 && (
                   <button
-                    onClick={() => setSearchQuery("")}
-                    className="mt-6 px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    onClick={clearFilters}
+                    className="mt-2 px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
                   >
-                    Clear Search
+                    Clear All Filters
                   </button>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPosts.map((post, index) => (
-                  <div
-                    key={post.id}
-                    className="animate-in fade-in slide-in-from-bottom duration-500"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <PostCard
-                      id={post.id}
-                      title={post.title}
-                      description={post.description}
-                      imageUrl={post.image_url || ""}
-                      affiliateLink={post.affiliate_link}
-                      price={post.price}
-                      category={post.category}
-                      tags={post.tags}
-                      stock_status={post.stock_status}
-                      affiliate_platform={post.affiliate_platform}
-                      is_featured={post.is_featured}
-                      video_url={post.video_url}
-                      additional_images={post.additional_images}
-                      slug={post.slug}
-                    />
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredPosts.slice(0, displayedCount).map((post, index) => (
+                    <div
+                      key={post.id}
+                      className="animate-in fade-in slide-in-from-bottom duration-500"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <PostCard
+                        id={post.id}
+                        title={post.title}
+                        description={post.description}
+                        imageUrl={post.image_url || ""}
+                        affiliateLink={post.affiliate_link}
+                        price={post.price}
+                        category={post.category}
+                        tags={post.tags}
+                        stock_status={post.stock_status}
+                        affiliate_platform={post.affiliate_platform}
+                        is_featured={post.is_featured}
+                        video_url={post.video_url}
+                        additional_images={post.additional_images}
+                        slug={post.slug}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Load More Button */}
+                {filteredPosts.length > displayedCount && (
+                  <div className="flex justify-center mt-8">
+                    <Button
+                      onClick={handleLoadMore}
+                      className="px-8 py-6 text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white shadow-lg hover:shadow-xl transition-all"
+                    >
+                      Load More Products
+                      <span className="ml-2 text-sm text-gray-300">
+                        ({filteredPosts.length - displayedCount} more available)
+                      </span>
+                    </Button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
 
           {/* News Sidebar - 1/4 width */}
-          {!searchQuery && (
+          {!searchQuery && selectedCategory === "all" && (
             <div className="xl:col-span-1">
               <div className="sticky top-4">
                 <div className="flex items-center justify-between mb-6">
@@ -289,8 +418,6 @@ const Home = () => {
                     <p className="text-gray-400">No news posts available yet.</p>
                   </div>
                 )}
-
-
               </div>
             </div>
           )}
@@ -298,7 +425,7 @@ const Home = () => {
       </div>
 
       {/* Call to Action Banner */}
-      {!searchQuery && filteredPosts.length > 0 && (
+      {!searchQuery && selectedCategory === "all" && filteredPosts.length > 0 && (
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="bg-gradient-to-r from-gray-800 to-black rounded-2xl p-8 md:p-12 text-center shadow-2xl border border-gray-700">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">

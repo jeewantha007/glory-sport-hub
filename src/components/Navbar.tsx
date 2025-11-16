@@ -41,6 +41,16 @@ const Navbar = () => {
               Home
             </Link>
             <Link
+              to="/categories"
+              className={`transition-colors ${
+                isActive("/categories")
+                  ? "text-white font-medium"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Categories
+            </Link>
+            <Link
               to="/about"
               className={`transition-colors ${
                 isActive("/about")
@@ -86,6 +96,17 @@ const Navbar = () => {
                 }`}
               >
                 Home
+              </Link>
+              <Link
+                to="/categories"
+                onClick={closeMenu}
+                className={`transition-colors ${
+                  isActive("/categories")
+                    ? "text-white font-medium"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Categories
               </Link>
               <Link
                 to="/about"

@@ -38,6 +38,27 @@ const PostCard = ({
   const hasMultipleMedia = (additional_images && additional_images.length > 0) || video_url;
   const postUrl = slug ? `/post/${slug}` : `/post/${id}`;
 
+  // Strip HTML tags from description for card preview
+  const stripHtml = (html: string): string => {
+    if (typeof window !== 'undefined') {
+      const tmp = document.createElement('DIV');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+    // Fallback for SSR: use regex to strip HTML tags and decode common entities
+    return html
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim();
+  };
+
+  const cleanDescription = stripHtml(description);
+
   return (
     <div className="group bg-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-800 hover:-translate-y-2">
       <Link to={postUrl}>
@@ -135,7 +156,7 @@ const PostCard = ({
         </Link>
         
         <p className="text-gray-400 text-sm mb-3 line-clamp-2 leading-relaxed">
-          {description}
+          {cleanDescription}
         </p>
 
         {/* Tags */}
