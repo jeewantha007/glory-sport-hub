@@ -10,6 +10,11 @@ interface Section {
   images?: string[];
   video?: string;
   videoType?: string;
+  buttons?: Array<{
+    text: string;
+    url: string;
+    style: "primary" | "secondary" | "outline" | "link";
+  }>;
 }
 
 interface NewsPost {

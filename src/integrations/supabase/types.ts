@@ -37,6 +37,11 @@ export interface NewsPost {
     images: string[];
     video: string;
     videoType: "upload" | "url";
+    buttons?: Array<{
+      text: string;
+      url: string;
+      style: "primary" | "secondary" | "outline" | "link";
+    }>;
   }> | null;
   meta_title?: string;
   meta_description?: string;

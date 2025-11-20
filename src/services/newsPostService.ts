@@ -37,6 +37,11 @@ interface Section {
   images: string[];
   video: string;
   videoType: "upload" | "url";
+  buttons?: Array<{
+    text: string;
+    url: string;
+    style: "primary" | "secondary" | "outline" | "link";
+  }>;
 }
 
 // Update the NewsPost interface to use the proper section structure

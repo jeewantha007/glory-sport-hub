@@ -14,6 +14,20 @@ interface Section {
   images: string[];
   video: string;
   videoType: "upload" | "url";
+  buttons?: Array<{
+    text: string;
+    url: string;
+    style: "primary" | "secondary" | "outline" | "link";
+    alignment?: "left" | "center" | "right";
+  }>;
+  // Styling and alignment metadata
+  headingLevel?: string;
+  headingAlignment?: "left" | "center" | "right";
+  headingStyling?: { fontFamily?: string; fontSize?: string; color?: string };
+  paragraphAlignments?: ("left" | "center" | "right")[];
+  paragraphStyling?: Array<{ fontFamily?: string; fontSize?: string; color?: string }>;
+  imageData?: Array<{ alt?: string; caption?: string; alignment?: "left" | "center" | "right" }>;
+  videoAlignment?: "left" | "center" | "right";
 }
 
 const NewsDetails = () => {
@@ -121,12 +135,41 @@ const NewsDetails = () => {
   let sections: Section[] = [];
   if (post.sections) {
     try {
-      sections = Array.isArray(post.sections)
+      const parsed = Array.isArray(post.sections)
         ? post.sections
         : typeof post.sections === "string"
         ? JSON.parse(post.sections)
         : [];
-    } catch {
+      
+      // Filter out invalid sections and ensure proper structure
+      sections = parsed
+        .filter((section: any) => section && typeof section === 'object')
+        .map((section: any) => ({
+          id: section.id || Date.now().toString() + Math.random(),
+          subtitle: section.subtitle || "",
+          description: section.description || "",
+          images: Array.isArray(section.images) ? section.images.filter((img: any) => img && typeof img === 'string') : [],
+          video: section.video || "",
+          videoType: section.videoType === "upload" ? "upload" : "url",
+          buttons: Array.isArray(section.buttons) ? section.buttons.filter((btn: any) => btn && btn.text && btn.url) : [],
+          // Preserve styling and alignment metadata
+          headingLevel: section.headingLevel,
+          headingAlignment: section.headingAlignment,
+          headingStyling: section.headingStyling,
+          paragraphAlignments: section.paragraphAlignments,
+          paragraphStyling: section.paragraphStyling,
+          imageData: section.imageData,
+          videoAlignment: section.videoAlignment,
+        }))
+        .filter((section: Section) => 
+          section.subtitle || 
+          section.description || 
+          (section.images && section.images.length > 0) || 
+          section.video ||
+          (section.buttons && section.buttons.length > 0)
+        );
+    } catch (e) {
+      console.error("Failed to parse sections:", e);
       sections = [];
     }
   }
@@ -273,22 +316,58 @@ const NewsDetails = () => {
                   key={section.id}
                   className="border-b border-gray-800 pb-8 sm:pb-10 md:pb-12 last:border-b-0"
                 >
-                  {section.subtitle && (
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white">
-                      {section.subtitle}
-                    </h2>
-                  )}
+                  {(section.subtitle || section.description) && (
+                    <>
+                      {section.subtitle && (
+                        <h2 
+                          className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white ${
+                            section.headingAlignment === "center" ? "text-center" :
+                            section.headingAlignment === "right" ? "text-right" : "text-left"
+                          }`}
+                          style={{
+                            fontFamily: section.headingStyling?.fontFamily || "inherit",
+                            fontSize: section.headingStyling?.fontSize || "inherit",
+                            color: section.headingStyling?.color || "inherit",
+                          }}
+                        >
+                          {section.subtitle}
+                        </h2>
+                      )}
 
-                  {section.description && (
-                    <div className="prose prose-sm sm:prose-base md:prose-lg prose-invert max-w-none mb-6 sm:mb-8">
-                      <p className="text-gray-300 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-                        {section.description}
-                      </p>
-                    </div>
+                      {section.description && (
+                        <div className="prose prose-sm sm:prose-base md:prose-lg prose-invert max-w-none mb-6 sm:mb-8">
+                          {section.description.split(/\n\n+/).map((paragraph: string, paraIndex: number) => {
+                            const paraAlignment = Array.isArray(section.paragraphAlignments) 
+                              ? section.paragraphAlignments[paraIndex] || "left"
+                              : section.paragraphAlignments || "left";
+                            const paraStyling = Array.isArray(section.paragraphStyling)
+                              ? section.paragraphStyling[paraIndex] || {}
+                              : section.paragraphStyling || {};
+                            
+                            return (
+                              <p
+                                key={paraIndex}
+                                className={`text-gray-300 leading-relaxed whitespace-pre-line text-base sm:text-lg mb-4 ${
+                                  paraAlignment === "center" ? "text-center" :
+                                  paraAlignment === "right" ? "text-right" : "text-left"
+                                }`}
+                                style={{
+                                  fontFamily: paraStyling.fontFamily || "inherit",
+                                  fontSize: paraStyling.fontSize || "inherit",
+                                  color: paraStyling.color || "inherit",
+                                }}
+                              >
+                                {paragraph.trim()}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {/* Images Grid (Full Size) */}
-                  {section.images && section.images.length > 0 && (
+                  {section.images && Array.isArray(section.images) && section.images.length > 0 && (
                     <div
                       className={`grid gap-4 mb-8 ${
                         section.images.length === 1
@@ -298,26 +377,44 @@ const NewsDetails = () => {
                           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                       }`}
                     >
-                      {section.images.map((image, imgIndex) => (
-                        <div
-                          key={imgIndex}
-                          className="relative rounded-xl overflow-hidden group shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-black/10 flex justify-center items-center"
-                        >
-                          <img
-                            src={image}
-                            alt={`${section.subtitle || "Section"} image ${
-                              imgIndex + 1
-                            }`}
-                            className="w-full max-h-[600px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
-                          />
-                        </div>
-                      ))}
+                      {section.images
+                        .filter((image: any) => image && typeof image === 'string' && image.trim())
+                        .map((image: string, imgIndex: number) => {
+                          const imageData = Array.isArray(section.imageData) ? section.imageData[imgIndex] : {};
+                          const alignment = imageData?.alignment || "left";
+                          
+                          return (
+                            <div
+                              key={imgIndex}
+                              className={`relative rounded-xl overflow-hidden group shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-black/10 flex items-center ${
+                                alignment === "center" ? "justify-center" :
+                                alignment === "right" ? "justify-end" : "justify-start"
+                              }`}
+                            >
+                              <img
+                                src={image}
+                                alt={imageData?.alt || `${section.subtitle || "Section"} image ${imgIndex + 1}`}
+                                className="w-full max-h-[600px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
+                                onError={(e) => {
+                                  // Hide broken images
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              {imageData?.caption && (
+                                <p className="text-sm text-gray-400 mt-2 text-center">{imageData.caption}</p>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
                   )}
 
                   {/* Video Player */}
-                  {section.video && (
-                    <div className="mb-8">
+                  {section.video && section.video.trim() && (
+                    <div className={`mb-8 ${
+                      section.videoAlignment === "center" ? "flex justify-center" :
+                      section.videoAlignment === "right" ? "flex justify-end" : ""
+                    }`}>
                       {section.videoType === "upload" ? (
                         <div className="relative rounded-xl overflow-hidden shadow-2xl bg-black">
                           <video
@@ -357,6 +454,39 @@ const NewsDetails = () => {
                           )}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Buttons */}
+                  {section.buttons && Array.isArray(section.buttons) && section.buttons.length > 0 && (
+                    <div className={`flex flex-wrap gap-3 sm:gap-4 mt-6 sm:mt-8 ${
+                      (section.buttons[0]?.alignment || "left") === "center" ? "justify-center" :
+                      (section.buttons[0]?.alignment || "left") === "right" ? "justify-end" : "justify-start"
+                    }`}>
+                      {section.buttons.map((button, btnIndex) => {
+                        const buttonVariants: Record<string, any> = {
+                          primary: "bg-blue-600 hover:bg-blue-700 text-white",
+                          secondary: "bg-gray-700 hover:bg-gray-600 text-white",
+                          outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
+                          link: "text-blue-400 hover:text-blue-300 underline",
+                        };
+                        
+                        const buttonClass = buttonVariants[button.style] || buttonVariants.primary;
+                        
+                        return (
+                          <a
+                            key={btnIndex}
+                            href={button.url}
+                            target={button.url.startsWith('http') ? '_blank' : undefined}
+                            rel={button.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${buttonClass} ${
+                              button.style === 'link' ? '' : 'shadow-lg hover:shadow-xl'
+                            }`}
+                          >
+                            {button.text}
+                          </a>
+                        );
+                      })}
                     </div>
                   )}
                 </section>
