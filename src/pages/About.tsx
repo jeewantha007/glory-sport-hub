@@ -62,8 +62,17 @@ const About = () => {
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-gray-800 to-black py-12 sm:py-16 md:py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-gradient-x" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
+        {/* Hero Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="https://waedqmdlaupiusiqzipg.supabase.co/storage/v1/object/public/post-videos/Lucid_Origin_A_dynamic_and_vibrant_hero_section_for_a_sports_w_2.jpg"
+            alt="Sports Hero"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/90" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 animate-gradient-x" />
         
         {/* Floating Elements */}
         <div className="absolute top-10 left-10 animate-float opacity-20">
@@ -224,6 +233,61 @@ const About = () => {
                 We maintain complete transparency about our affiliate partnerships while ensuring our reviews remain 
                 unbiased and focused on your needs.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Partners Section */}
+        <div className="max-w-6xl mx-auto mb-12 sm:mb-16 md:mb-20">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full px-4 py-2 text-sm font-medium text-blue-300 mb-4 border border-blue-500/30">
+              <Award className="w-4 h-4" />
+              Trusted Partners
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                Our Partners
+              </span>
+            </h2>
+            <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto px-4">
+              We collaborate with the most trusted brands in sports to bring you the best products and deals
+            </p>
+          </div>
+
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all opacity-50" />
+            <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl border border-gray-700/50 hover:border-gray-600/50 transition-all">
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-10">
+                <div className="group/partner text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-white group-hover/partner:text-blue-400 transition-colors">
+                    Fanatics
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-gray-700" />
+                <div className="group/partner text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-white group-hover/partner:text-blue-400 transition-colors">
+                    NFLShop
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-gray-700" />
+                <div className="group/partner text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-white group-hover/partner:text-blue-400 transition-colors">
+                    Shop.NHL
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-gray-700" />
+                <div className="group/partner text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-white group-hover/partner:text-blue-400 transition-colors">
+                    SportsMemorabilia
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-gray-700" />
+                <div className="group/partner text-center">
+                  <div className="text-base sm:text-lg font-medium text-gray-400 group-hover/partner:text-blue-300 transition-colors">
+                    & Many More
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
