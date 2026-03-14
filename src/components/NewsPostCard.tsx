@@ -18,11 +18,11 @@ interface Section {
 }
 
 interface NewsPost {
-  id: string;
+  _id: string;
   title: string;
-  meta_description?: string;
-  created_at?: string;
-  sections?: string | Section[];
+  excerpt?: string;
+  publishedAt?: string;
+  image_url?: string;
   slug?: string;
 }
 
@@ -31,28 +31,8 @@ interface NewsPostCardProps {
 }
 
 const NewsPostCard = ({ post }: NewsPostCardProps) => {
-  // Parse the first image from sections JSON
-  const getFirstSectionImage = (sections?: string | Section[]): string | null => {
-    if (!sections) return null;
-
-    try {
-      const parsed: Section[] = Array.isArray(sections)
-        ? sections
-        : JSON.parse(sections);
-
-      for (const section of parsed) {
-        if (section.images && section.images.length > 0) {
-          return section.images[0];
-        }
-      }
-    } catch (err) {
-      console.error("Failed to parse sections:", err);
-    }
-    return null;
-  };
-
   const firstImage =
-    getFirstSectionImage(post.sections) ||
+    post.image_url ||
     "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=400&fit=crop";
 
   const formatDate = (dateString?: string) => {
@@ -86,18 +66,18 @@ const NewsPostCard = ({ post }: NewsPostCardProps) => {
       </CardHeader>
 
       <CardContent className="pb-4">
-        {post.meta_description && (
+        {post.excerpt && (
           <p className="text-gray-400 line-clamp-3 text-sm leading-relaxed">
-            {post.meta_description}
+            {post.excerpt}
           </p>
         )}
       </CardContent>
 
       <CardFooter className="flex justify-between items-center pt-4 border-t border-gray-800">
-        {post.created_at && (
+        {post.publishedAt && (
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Calendar className="w-4 h-4" />
-            <span>{formatDate(post.created_at)}</span>
+            <span>{formatDate(post.publishedAt)}</span>
           </div>
         )}
         <Button
@@ -106,7 +86,7 @@ const NewsPostCard = ({ post }: NewsPostCardProps) => {
           asChild
           className="text-blue-400 hover:text-blue-300 hover:bg-blue-950/30 group/btn"
         >
-          <Link to={`/news/${post.slug || post.id}`} className="flex items-center gap-2">
+          <Link to={`/news/${post.slug || post._id}`} className="flex items-center gap-2">
             Read More
             <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
           </Link>

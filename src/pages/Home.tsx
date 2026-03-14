@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { newsService } from "@/services";
+import { client, newsQueries } from "@/lib/sanity.client";
 import { Link } from "react-router-dom";
 import hero from "@/assets/hero.jpg";
 import EmailSubscribeForm from "@/components/EmailSubscribeForm";
@@ -32,10 +32,12 @@ interface Post {
 }
 
 interface NewsPost {
-  id: string;
+  _id: string;
   title: string;
-  meta_description?: string;
-  created_at?: string;
+  excerpt?: string;
+  publishedAt?: string;
+  image_url?: string;
+  slug?: string;
 }
 
 const POSTS_PER_PAGE = 12; // Number of products to load per page
@@ -82,10 +84,8 @@ const Home = () => {
 
   const fetchNewsPosts = async () => {
     try {
-      const { data, error } = await newsService.fetchAllNews();
-
-      if (error) throw error;
-      setNewsPosts(data?.slice(0, 3) || []);
+      const data = await client.fetch(newsQueries.recentNews);
+      setNewsPosts(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -444,7 +444,7 @@ const Home = () => {
                 {newsPosts.length > 0 ? (
                   <div className="space-y-6">
                     {newsPosts.map((post) => (
-                      <NewsPostCard key={post.id} post={post} />
+                      <NewsPostCard key={post._id} post={post} />
                     ))}
                   </div>
                 ) : (

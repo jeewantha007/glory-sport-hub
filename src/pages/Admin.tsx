@@ -1,38 +1,32 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, LogOut, Package, Newspaper, Moon, Sun } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, Package, Newspaper, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { authService, postService } from "@/services";
 import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import StatsCards from "./admin/StatsCards";
 import PostForm from "./admin/PostForm";
-import NewsPostForm from "./admin/NewsPostForm";
 import PostsFilter from "./admin/PostsFilter";
 import PostsList from "./admin/PostsList";
-import NewsPostsList from "./admin/NewsPostsList";
-import { postService, newsPostService, authService } from "@/services";
-import { Post, NewsPost } from "@/integrations/supabase/types";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Post } from "@/integrations/supabase/types";
 
 const Admin = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
-  const [filteredNewsPosts, setFilteredNewsPosts] = useState<NewsPost[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const [editingNewsPost, setEditingNewsPost] = useState<NewsPost | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
-  const [selectedNewsPosts, setSelectedNewsPosts] = useState<Set<string>>(new Set());
-  const [addingType, setAddingType] = useState<"product" | "news">("product");
-  const [activeTab, setActiveTab] = useState("products");
+  const [addingType, setAddingType] = useState<"product">("product");
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "products";
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [newsCurrentPage, setNewsCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,7 +38,6 @@ const Admin = () => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -100,11 +93,10 @@ const Admin = () => {
     }
 
     setFilteredPosts(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [posts, searchTerm, filterCategory, sortBy]);
 
   const fetchPosts = async () => {
-    // Fetch product posts
     const { data: postData, error: postError } = await postService.fetchPosts();
     
     if (postError)
@@ -113,42 +105,11 @@ const Admin = () => {
       setPosts(postData || []);
       setFilteredPosts(postData || []);
     }
-    
-    // Fetch news posts
-    const { data: newsData, error: newsError } = await newsPostService.fetchNewsPosts();
-    if (newsError)
-      toast({ title: "Error", description: "Failed to fetch news posts", variant: "destructive" });
-    else {
-      // Transform the data to match the NewsPost interface
-      const transformedNewsData = (newsData || []).map(post => {
-        let sections = null;
-        if (post.sections) {
-          try {
-            sections = typeof post.sections === 'string' ? JSON.parse(post.sections) : post.sections;
-          } catch (e) {
-            console.error('Failed to parse sections for post:', post.id, e);
-            sections = null;
-          }
-        }
-        return {
-          ...post,
-          sections
-        };
-      });
-      setNewsPosts(transformedNewsData);
-      setFilteredNewsPosts(transformedNewsData);
-    }
-  };
-
-  const handleLogout = async () => {
-    await authService.signOut();
-    navigate("/");
   };
 
   const handleFormSuccess = () => {
     setIsAdding(false);
     setEditingPost(null);
-    setEditingNewsPost(null);
     fetchPosts();
   };
 
@@ -156,23 +117,13 @@ const Admin = () => {
     setEditingPost(post);
     setAddingType("product");
     setIsAdding(true);
-    setActiveTab("products");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSearchParams({ tab: "products" });
   };
 
-  const handleEditNewsPost = (post: NewsPost) => {
-    setEditingNewsPost(post);
-    setAddingType("news");
-    setIsAdding(true);
-    setActiveTab("news");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
-
     const { error } = await postService.deletePost(id);
-
     if (error)
       toast({ title: "Error", description: "Failed to delete post", variant: "destructive" });
     else {
@@ -181,25 +132,11 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteNewsPost = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this news post?")) return;
-
-    const { error } = await newsPostService.deleteNewsPost(id);
-
-    if (error)
-      toast({ title: "Error", description: "Failed to delete news post", variant: "destructive" });
-    else {
-      toast({ title: "Success!", description: "News post deleted successfully." });
-      fetchPosts();
-    }
-  };
 
   const handleBulkDelete = async () => {
     if (selectedPosts.size === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedPosts.size} posts?`)) return;
-
     const { errors } = await postService.bulkDeletePosts(Array.from(selectedPosts));
-
     if (errors && errors.length > 0)
       toast({ title: "Error", description: "Failed to delete some posts", variant: "destructive" });
     else {
@@ -209,26 +146,6 @@ const Admin = () => {
     }
   };
 
-  const handleBulkDeleteNewsPosts = async () => {
-    if (selectedNewsPosts.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedNewsPosts.size} news posts?`)) return;
-
-    // Since there's no bulk delete for news posts, we'll delete them one by one
-    const deletePromises = Array.from(selectedNewsPosts).map(id => 
-      newsPostService.deleteNewsPost(id)
-    );
-
-    const results = await Promise.all(deletePromises);
-    const errors = results.filter(result => result.error);
-
-    if (errors.length > 0)
-      toast({ title: "Error", description: `Failed to delete ${errors.length} news posts`, variant: "destructive" });
-    else {
-      toast({ title: "Success!", description: `${selectedNewsPosts.size} news posts deleted successfully.` });
-      setSelectedNewsPosts(new Set());
-      fetchPosts();
-    }
-  };
 
   const togglePostSelection = (id: string) => {
     const newSelected = new Set(selectedPosts);
@@ -237,90 +154,60 @@ const Admin = () => {
     setSelectedPosts(newSelected);
   };
 
-  const toggleNewsPostSelection = (id: string) => {
-    const newSelected = new Set(selectedNewsPosts);
-    if (newSelected.has(id)) newSelected.delete(id);
-    else newSelected.add(id);
-    setSelectedNewsPosts(newSelected);
-  };
 
-  const uniqueCategories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean)));
+  const uniqueCategories = useMemo(() => 
+    Array.from(new Set(posts.map((p) => p.category).filter(Boolean))),
+    [posts]
+  );
 
-  // Pagination calculations for products
   const totalProductPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredPosts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Pagination calculations for news
-  const totalNewsPages = Math.ceil(filteredNewsPosts.length / ITEMS_PER_PAGE);
-  const paginatedNews = filteredNewsPosts.slice(
-    (newsCurrentPage - 1) * ITEMS_PER_PAGE,
-    newsCurrentPage * ITEMS_PER_PAGE
-  );
+
+  const setActiveTab = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   if (!session) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
-      <Navbar />
-
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="space-y-8">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 mb-8 shadow-xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-              <p className="text-white/90">Manage your affiliate content and track performance</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Theme Toggle Button */}
-              {mounted && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
-                  size="icon"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
-              )}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border shadow-sm">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your content and track performance</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {mounted && (
               <Button
-                variant="secondary"
-                onClick={handleLogout}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
+                variant="outline"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                size="icon"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Stats Cards */}
         <StatsCards posts={posts} />
 
-        {/* Tabs for Products and News */}
+        {/* Tabs for Products */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+          <TabsList className="grid w-full max-w-[200px] grid-cols-1 mb-8 bg-muted/50 p-1">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Products ({posts.length})
             </TabsTrigger>
-            <TabsTrigger value="news" className="flex items-center gap-2">
-              <Newspaper className="w-4 h-4" />
-              News ({newsPosts.length})
-            </TabsTrigger>
           </TabsList>
 
-          {/* Products Tab */}
           <TabsContent value="products" className="space-y-6">
-            {/* Add Product Post Button */}
             {!isAdding || addingType !== "product" ? (
               <div className="mb-8">
                 <Button
@@ -330,7 +217,7 @@ const Admin = () => {
                     setEditingPost(null);
                   }}
                   size="lg"
-                  className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg"
+                  className="bg-primary hover:opacity-90 shadow-lg"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Add Product Post
@@ -348,7 +235,6 @@ const Admin = () => {
               />
             )}
 
-            {/* Filter & Products List */}
             {!isAdding || addingType !== "product" ? (
               <>
                 <PostsFilter
@@ -377,7 +263,6 @@ const Admin = () => {
                   }}
                 />
 
-                {/* Pagination Controls for Products */}
                 {totalProductPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-6">
                     <Button
@@ -395,7 +280,6 @@ const Admin = () => {
                           onClick={() => setCurrentPage(page)}
                           variant={currentPage === page ? "default" : "outline"}
                           size="sm"
-                          className={currentPage === page ? "bg-primary" : ""}
                         >
                           {page}
                         </Button>
@@ -412,7 +296,6 @@ const Admin = () => {
                   </div>
                 )}
                 
-                {/* Show results info */}
                 {filteredPosts.length > 0 && (
                   <div className="text-center text-sm text-muted-foreground mt-4">
                     Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredPosts.length)} of {filteredPosts.length} products
@@ -421,103 +304,9 @@ const Admin = () => {
               </>
             ) : null}
           </TabsContent>
-
-          {/* News Tab */}
-          <TabsContent value="news" className="space-y-6">
-            {/* Add News Post Button */}
-            {!isAdding || addingType !== "news" ? (
-              <div className="mb-8">
-                <Button
-                  onClick={() => {
-                    setIsAdding(true);
-                    setAddingType("news");
-                    setEditingNewsPost(null);
-                  }}
-                  size="lg"
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:opacity-90 shadow-lg"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add News Post
-                </Button>
-              </div>
-            ) : (
-              <NewsPostForm
-                editingPost={editingNewsPost}
-                onSuccess={handleFormSuccess}
-                onCancel={() => {
-                  setIsAdding(false);
-                  setEditingNewsPost(null);
-                }}
-              />
-            )}
-
-            {/* News Posts List */}
-            {!isAdding || addingType !== "news" ? (
-              <>
-                <NewsPostsList
-                  posts={paginatedNews}
-                  allPosts={newsPosts}
-                  selectedPosts={selectedNewsPosts}
-                  onToggleSelection={toggleNewsPostSelection}
-                  onEdit={handleEditNewsPost}
-                  onDelete={handleDeleteNewsPost}
-                  onBulkDelete={handleBulkDeleteNewsPosts}
-                  searchTerm={searchTerm}
-                  onAddPost={() => {
-                    setIsAdding(true);
-                    setAddingType("news");
-                  }}
-                />
-
-                {/* Pagination Controls for News */}
-                {totalNewsPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-6">
-                    <Button
-                      onClick={() => setNewsCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={newsCurrentPage === 1}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Previous
-                    </Button>
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: totalNewsPages }, (_, i) => i + 1).map(page => (
-                        <Button
-                          key={page}
-                          onClick={() => setNewsCurrentPage(page)}
-                          variant={newsCurrentPage === page ? "default" : "outline"}
-                          size="sm"
-                          className={newsCurrentPage === page ? "bg-primary" : ""}
-                        >
-                          {page}
-                        </Button>
-                      ))}
-                    </div>
-                    <Button
-                      onClick={() => setNewsCurrentPage(prev => Math.min(totalNewsPages, prev + 1))}
-                      disabled={newsCurrentPage === totalNewsPages}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-
-                {/* Show results info */}
-                {filteredNewsPosts.length > 0 && (
-                  <div className="text-center text-sm text-muted-foreground mt-4">
-                    Showing {((newsCurrentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(newsCurrentPage * ITEMS_PER_PAGE, filteredNewsPosts.length)} of {filteredNewsPosts.length} news posts
-                  </div>
-                )}
-              </>
-            ) : null}
-          </TabsContent>
         </Tabs>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

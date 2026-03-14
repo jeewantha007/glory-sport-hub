@@ -1,34 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { newsService } from "@/services";
+import { PortableText } from "@portabletext/react";
+import { client, newsQueries, urlFor } from "@/lib/sanity.client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Calendar, Clock, Play } from "lucide-react";
 import { useMeta } from "@/hooks/use-meta";
-
-interface Section {
-  id: string;
-  subtitle: string;
-  description: string;
-  images: string[];
-  video: string;
-  videoType: "upload" | "url";
-  buttons?: Array<{
-    text: string;
-    url: string;
-    style: "primary" | "secondary" | "outline" | "link";
-    alignment?: "left" | "center" | "right";
-  }>;
-  // Styling and alignment metadata
-  headingLevel?: string;
-  headingAlignment?: "left" | "center" | "right";
-  headingStyling?: { fontFamily?: string; fontSize?: string; color?: string };
-  paragraphAlignments?: ("left" | "center" | "right")[];
-  paragraphStyling?: Array<{ fontFamily?: string; fontSize?: string; color?: string }>;
-  imageData?: Array<{ alt?: string; caption?: string; alignment?: "left" | "center" | "right" }>;
-  videoAlignment?: "left" | "center" | "right";
-}
 
 const NewsDetails = () => {
   const { identifier } = useParams<{ identifier: string }>();
@@ -39,8 +17,8 @@ const NewsDetails = () => {
 
   // Set up meta tags
   useMeta({
-    title: post?.meta_title || post?.title,
-    description: post?.meta_description || post?.description,
+    title: post?.title,
+    description: post?.meta_description,
     image: post?.featured_image,
     url: post?.slug ? `https://www.gloryofsport.com/news/${post.slug}` : undefined,
     type: 'article'
@@ -56,30 +34,13 @@ const NewsDetails = () => {
 
       try {
         setLoading(true);
-        let data, error;
-
-        // Check if the identifier looks like a slug (contains letters and hyphens)
-        if (identifier.includes('-') && /[a-z]/.test(identifier)) {
-          // Treat it as a slug
-          const result = await newsService.fetchNewsBySlug(identifier);
-          data = result.data;
-          error = result.error;
-        } else {
-          // Treat it as an ID
-          const result = await newsService.fetchNewsById(identifier);
-          data = result.data;
-          error = result.error;
-        }
+        // In this implementation, we mostly use slug. If it's an ID, we'd need a different query.
+        // For now, let's assume identifier is always a slug as per our new link structure.
+        const data = await client.fetch(newsQueries.newsBySlug, { slug: identifier });
         
-        if (error) throw error;
         if (!data) throw new Error("News post not found");
         
         setPost(data);
-        
-        // If we fetched by ID but the post has a slug, redirect to the slug URL
-        if (identifier && data.slug && data.slug !== identifier) {
-          navigate(`/news/${data.slug}`, { replace: true });
-        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch news post");
       } finally {
@@ -87,7 +48,7 @@ const NewsDetails = () => {
       }
     };
     fetchPost();
-  }, [identifier, navigate]);
+  }, [identifier]);
 
   if (loading) {
     return (
@@ -131,49 +92,6 @@ const NewsDetails = () => {
     );
   }
 
-  // Parse sections safely
-  let sections: Section[] = [];
-  if (post.sections) {
-    try {
-      const parsed = Array.isArray(post.sections)
-        ? post.sections
-        : typeof post.sections === "string"
-        ? JSON.parse(post.sections)
-        : [];
-      
-      // Filter out invalid sections and ensure proper structure
-      sections = parsed
-        .filter((section: any) => section && typeof section === 'object')
-        .map((section: any) => ({
-          id: section.id || Date.now().toString() + Math.random(),
-          subtitle: section.subtitle || "",
-          description: section.description || "",
-          images: Array.isArray(section.images) ? section.images.filter((img: any) => img && typeof img === 'string') : [],
-          video: section.video || "",
-          videoType: section.videoType === "upload" ? "upload" : "url",
-          buttons: Array.isArray(section.buttons) ? section.buttons.filter((btn: any) => btn && btn.text && btn.url) : [],
-          // Preserve styling and alignment metadata
-          headingLevel: section.headingLevel,
-          headingAlignment: section.headingAlignment,
-          headingStyling: section.headingStyling,
-          paragraphAlignments: section.paragraphAlignments,
-          paragraphStyling: section.paragraphStyling,
-          imageData: section.imageData,
-          videoAlignment: section.videoAlignment,
-        }))
-        .filter((section: Section) => 
-          section.subtitle || 
-          section.description || 
-          (section.images && section.images.length > 0) || 
-          section.video ||
-          (section.buttons && section.buttons.length > 0)
-        );
-    } catch (e) {
-      console.error("Failed to parse sections:", e);
-      sections = [];
-    }
-  }
-
   const formatDate = (dateString?: string) =>
     dateString
       ? new Date(dateString).toLocaleDateString("en-US", {
@@ -183,26 +101,36 @@ const NewsDetails = () => {
         })
       : "";
 
-  const getReadingTime = (sections: Section[]) => {
-    const wordCount = sections.reduce(
-      (total, section) => total + (section.description?.split(" ").length || 0),
-      0
-    );
-    return `${Math.ceil(wordCount / 200)} min read`;
-  };
-
-  const convertToEmbedUrl = (url: string) => {
-    if (url.includes("youtube.com/watch")) {
-      const id = url.split("v=")[1]?.split("&")[0];
-      return `https://www.youtube.com/embed/${id}`;
-    } else if (url.includes("youtu.be/")) {
-      const id = url.split("youtu.be/")[1]?.split("?")[0];
-      return `https://www.youtube.com/embed/${id}`;
-    } else if (url.includes("vimeo.com/")) {
-      const id = url.split("vimeo.com/")[1]?.split("?")[0];
-      return `https://player.vimeo.com/video/${id}`;
-    }
-    return url;
+  const ptComponents = {
+    types: {
+      image: ({ value }: any) => {
+        if (!value?.asset?._ref) return null;
+        return (
+          <div className="my-8 flex justify-center">
+            <img
+              src={urlFor(value).width(800).url()}
+              alt={value.alt || "Post image"}
+              className="rounded-xl shadow-lg max-w-full"
+            />
+          </div>
+        );
+      },
+    },
+    block: {
+      h2: ({ children }: any) => <h2 className="text-3xl font-bold text-white mt-10 mb-4">{children}</h2>,
+      h3: ({ children }: any) => <h3 className="text-2xl font-bold text-white mt-8 mb-3">{children}</h3>,
+      normal: ({ children }: any) => <p className="text-gray-300 text-lg leading-relaxed mb-6">{children}</p>,
+    },
+    marks: {
+      link: ({ children, value }: any) => {
+        const rel = !value.href.startsWith("/") ? "noreferrer noopener" : undefined;
+        return (
+          <a href={value.href} rel={rel} className="text-blue-400 hover:underline">
+            {children}
+          </a>
+        );
+      },
+    },
   };
 
   return (
@@ -228,70 +156,18 @@ const NewsDetails = () => {
             </h1>
 
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8">
-              {post.created_at && (
+              {post.publishedAt && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <time dateTime={post.created_at}>
-                    {formatDate(post.created_at)}
+                  <time dateTime={post.publishedAt}>
+                    {formatDate(post.publishedAt)}
                   </time>
-                </div>
-              )}
-              {sections.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{getReadingTime(sections)}</span>
                 </div>
               )}
             </div>
 
-            {/* Featured Video */}
-            {post.video && (
-              <div className="mb-6 sm:mb-8">
-                {post.videoType === "upload" || !post.video.includes("http") ? (
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
-                    <video
-                      src={post.video}
-                      controls
-                      className="w-full max-h-[600px]"
-                      preload="metadata"
-                      poster={post.featured_image}
-                    />
-                  </div>
-                ) : (
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
-                    {(post.video.includes("youtube.com") ||
-                      post.video.includes("youtu.be") ||
-                      post.video.includes("vimeo.com")) ? (
-                      <div className="relative" style={{ paddingBottom: "56.25%" }}>
-                        <iframe
-                          src={convertToEmbedUrl(post.video)}
-                          title="Featured video player"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          className="absolute top-0 left-0 w-full h-full"
-                        ></iframe>
-                      </div>
-                    ) : (
-                      <a
-                        href={post.video}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 p-8 rounded-xl text-white transition-all duration-300 group"
-                      >
-                        <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                        <span className="text-lg font-semibold">
-                          Watch External Video
-                        </span>
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Featured Image */}
-            {!post.video && post.featured_image && (
+            {post.featured_image && (
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8 shadow-2xl bg-black/10 flex justify-center items-center">
                 <img
                   src={post.featured_image}
@@ -301,204 +177,17 @@ const NewsDetails = () => {
               </div>
             )}
 
-            {post.meta_description && (
+            {post.excerpt && (
               <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed italic border-l-4 border-blue-500 pl-4 sm:pl-6 py-2">
-                {post.meta_description}
+                {post.excerpt}
               </p>
             )}
           </header>
 
           {/* Content Sections */}
-          {sections && sections.length > 0 ? (
-            <div className="space-y-10 sm:space-y-12 md:space-y-16">
-              {sections.map((section, index) => (
-                <section
-                  key={section.id}
-                  className="border-b border-gray-800 pb-8 sm:pb-10 md:pb-12 last:border-b-0"
-                >
-                  {(section.subtitle || section.description) && (
-                    <>
-                      {section.subtitle && (
-                        <h2 
-                          className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white ${
-                            section.headingAlignment === "center" ? "text-center" :
-                            section.headingAlignment === "right" ? "text-right" : "text-left"
-                          }`}
-                          style={{
-                            fontFamily: section.headingStyling?.fontFamily || "inherit",
-                            fontSize: section.headingStyling?.fontSize || "inherit",
-                            color: section.headingStyling?.color || "inherit",
-                          }}
-                        >
-                          {section.subtitle}
-                        </h2>
-                      )}
-
-                      {section.description && (
-                        <div className="prose prose-sm sm:prose-base md:prose-lg prose-invert max-w-none mb-6 sm:mb-8">
-                          {section.description.split(/\n\n+/).map((paragraph: string, paraIndex: number) => {
-                            const paraAlignment = Array.isArray(section.paragraphAlignments) 
-                              ? section.paragraphAlignments[paraIndex] || "left"
-                              : section.paragraphAlignments || "left";
-                            const paraStyling = Array.isArray(section.paragraphStyling)
-                              ? section.paragraphStyling[paraIndex] || {}
-                              : section.paragraphStyling || {};
-                            
-                            return (
-                              <p
-                                key={paraIndex}
-                                className={`text-gray-300 leading-relaxed whitespace-pre-line text-base sm:text-lg mb-4 ${
-                                  paraAlignment === "center" ? "text-center" :
-                                  paraAlignment === "right" ? "text-right" : "text-left"
-                                }`}
-                                style={{
-                                  fontFamily: paraStyling.fontFamily || "inherit",
-                                  fontSize: paraStyling.fontSize || "inherit",
-                                  color: paraStyling.color || "inherit",
-                                }}
-                              >
-                                {paragraph.trim()}
-                              </p>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* Images Grid (Full Size) */}
-                  {section.images && Array.isArray(section.images) && section.images.length > 0 && (
-                    <div
-                      className={`grid gap-4 mb-8 ${
-                        section.images.length === 1
-                          ? "grid-cols-1"
-                          : section.images.length === 2
-                          ? "grid-cols-1 md:grid-cols-2"
-                          : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                      }`}
-                    >
-                      {section.images
-                        .filter((image: any) => image && typeof image === 'string' && image.trim())
-                        .map((image: string, imgIndex: number) => {
-                          const imageData = Array.isArray(section.imageData) ? section.imageData[imgIndex] : {};
-                          const alignment = imageData?.alignment || "left";
-                          
-                          return (
-                            <div
-                              key={imgIndex}
-                              className={`relative rounded-xl overflow-hidden group shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-black/10 flex items-center ${
-                                alignment === "center" ? "justify-center" :
-                                alignment === "right" ? "justify-end" : "justify-start"
-                              }`}
-                            >
-                              <img
-                                src={image}
-                                alt={imageData?.alt || `${section.subtitle || "Section"} image ${imgIndex + 1}`}
-                                className="w-full max-h-[600px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
-                                onError={(e) => {
-                                  // Hide broken images
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                              {imageData?.caption && (
-                                <p className="text-sm text-gray-400 mt-2 text-center">{imageData.caption}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {/* Video Player */}
-                  {section.video && section.video.trim() && (
-                    <div className={`mb-8 ${
-                      section.videoAlignment === "center" ? "flex justify-center" :
-                      section.videoAlignment === "right" ? "flex justify-end" : ""
-                    }`}>
-                      {section.videoType === "upload" ? (
-                        <div className="relative rounded-xl overflow-hidden shadow-2xl bg-black">
-                          <video
-                            src={section.video}
-                            controls
-                            className="w-full max-h-[600px]"
-                            preload="metadata"
-                          />
-                        </div>
-                      ) : (
-                        <div className="relative rounded-xl overflow-hidden shadow-2xl bg-gray-900">
-                          {(section.video.includes("youtube.com") ||
-                            section.video.includes("youtu.be") ||
-                            section.video.includes("vimeo.com")) ? (
-                            <div className="relative" style={{ paddingBottom: "56.25%" }}>
-                              <iframe
-                                src={convertToEmbedUrl(section.video)}
-                                title={`Video player ${index + 1}`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                                className="absolute top-0 left-0 w-full h-full"
-                              ></iframe>
-                            </div>
-                          ) : (
-                            <a
-                              href={section.video}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 p-8 rounded-xl text-white transition-all duration-300 group"
-                            >
-                              <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                              <span className="text-lg font-semibold">
-                                Watch External Video
-                              </span>
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Buttons */}
-                  {section.buttons && Array.isArray(section.buttons) && section.buttons.length > 0 && (
-                    <div className={`flex flex-wrap gap-3 sm:gap-4 mt-6 sm:mt-8 ${
-                      (section.buttons[0]?.alignment || "left") === "center" ? "justify-center" :
-                      (section.buttons[0]?.alignment || "left") === "right" ? "justify-end" : "justify-start"
-                    }`}>
-                      {section.buttons.map((button, btnIndex) => {
-                        const buttonVariants: Record<string, any> = {
-                          primary: "bg-blue-600 hover:bg-blue-700 text-white",
-                          secondary: "bg-gray-700 hover:bg-gray-600 text-white",
-                          outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
-                          link: "text-blue-400 hover:text-blue-300 underline",
-                        };
-                        
-                        const buttonClass = buttonVariants[button.style] || buttonVariants.primary;
-                        
-                        return (
-                          <a
-                            key={btnIndex}
-                            href={button.url}
-                            target={button.url.startsWith('http') ? '_blank' : undefined}
-                            rel={button.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-300 ${buttonClass} ${
-                              button.style === 'link' ? '' : 'shadow-lg hover:shadow-xl'
-                            }`}
-                          >
-                            {button.text}
-                          </a>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-gray-900/30 rounded-xl">
-              <p className="text-gray-400 text-lg">
-                No content available for this post.
-              </p>
-            </div>
-          )}
+          <div className="mt-8">
+            <PortableText value={post.body} components={ptComponents} />
+          </div>
 
           {/* Back Button */}
           <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 border-t border-gray-800 flex justify-center">

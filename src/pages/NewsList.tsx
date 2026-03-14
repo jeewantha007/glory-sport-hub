@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { newsService } from "@/services";
+import { client, newsQueries } from "@/lib/sanity.client";
 import NewsPostCard from "@/components/NewsPostCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,11 +9,12 @@ import { ChevronLeft, Newspaper, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface NewsPost {
-  id: string;
+  _id: string;
   title: string;
-  meta_description?: string;
-  created_at?: string;
+  excerpt?: string;
+  publishedAt?: string;
   image_url?: string;
+  slug?: string;
 }
 
 const NewsList = () => {
@@ -27,9 +28,7 @@ const NewsList = () => {
     const fetchNewsPosts = async () => {
       try {
         setLoading(true);
-        const { data, error } = await newsService.fetchAllNews();
-        
-        if (error) throw error;
+        const data = await client.fetch(newsQueries.allNews);
         setNewsPosts(data || []);
         setFilteredPosts(data || []);
       } catch (err: any) {
@@ -49,7 +48,7 @@ const NewsList = () => {
       const filtered = newsPosts.filter(
         (post) =>
           post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.meta_description?.toLowerCase().includes(searchQuery.toLowerCase())
+          post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredPosts(filtered);
     }
@@ -175,7 +174,7 @@ const NewsList = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {filteredPosts.map((post, index) => (
                 <div
-                  key={post.id}
+                  key={post._id}
                   style={{
                     animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
                   }}
