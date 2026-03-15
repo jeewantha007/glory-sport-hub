@@ -21,7 +21,7 @@ const AdminSidebar = ({ onLogout }: SidebarProps) => {
 
   const menuItems = [
     { icon: Package, label: "Products", path: "/admin?tab=products" },
-    { icon: Database, label: "Sanity CMS", path: "/admin/studio" },
+    { icon: Database, label: "Sanity CMS", path: "/admin/studio", external: true },
   ];
 
   return (
@@ -44,21 +44,47 @@ const AdminSidebar = ({ onLogout }: SidebarProps) => {
       </div>
 
       <nav className="flex-1 p-2 space-y-1">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-              isActive 
-                ? "bg-primary text-primary-foreground shadow-md" 
-                : "text-muted-foreground hover:bg-muted"
-            )}
-          >
-            <item.icon className="w-5 h-5 min-w-[20px]" />
-            {!collapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+        {menuItems.map((item) => {
+          const content = (
+            <>
+              <item.icon className="w-5 h-5 min-w-[20px]" />
+              {!collapsed && <span>{item.label}</span>}
+            </>
+          );
+
+          const className = cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:bg-muted"
+          );
+
+          if (item.external) {
+            return (
+              <a
+                key={item.path}
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+              >
+                {content}
+              </a>
+            );
+          }
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                isActive 
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {content}
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="p-2 border-t">
