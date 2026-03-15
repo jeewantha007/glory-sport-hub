@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import { 
-  LayoutDashboard, 
   Package, 
   Newspaper, 
   Settings, 
@@ -21,9 +20,8 @@ const AdminSidebar = ({ onLogout }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Package, label: "Products", path: "/admin?tab=products" },
-    { icon: Database, label: "Sanity CMS", path: "http://localhost:3333/structure/", external: true },
+    { icon: Database, label: "Sanity CMS", path: "/admin/studio" },
   ];
 
   return (
@@ -46,43 +44,21 @@ const AdminSidebar = ({ onLogout }: SidebarProps) => {
       </div>
 
       <nav className="flex-1 p-2 space-y-1">
-        {menuItems.map((item) => {
-          const content = (
-            <>
-              <item.icon className="w-5 h-5 min-w-[20px]" />
-              {!collapsed && <span>{item.label}</span>}
-            </>
-          );
-
-          if (item.external) {
-            return (
-              <a
-                key={item.path}
-                href={item.path}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:bg-muted"
-              >
-                {content}
-              </a>
-            );
-          }
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-md" 
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {content}
-            </NavLink>
-          );
-        })}
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+              isActive 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "text-muted-foreground hover:bg-muted"
+            )}
+          >
+            <item.icon className="w-5 h-5 min-w-[20px]" />
+            {!collapsed && <span>{item.label}</span>}
+          </NavLink>
+        ))}
       </nav>
 
       <div className="p-2 border-t">
