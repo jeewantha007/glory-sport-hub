@@ -14,6 +14,7 @@ export default defineConfig({
   plugins: [structureTool(), visionTool()],
 
   schema: {
-    types: schemaTypes as any[],
+    // @ts-ignore
+    types: schemaTypes,
   },
 })
